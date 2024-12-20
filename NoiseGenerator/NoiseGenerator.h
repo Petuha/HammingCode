@@ -6,5 +6,5 @@ enum class noiseForm {
 	asinbx, // Синусоидальная
 	axx // Квадратичная
 };
-std::vector<Dot> generateNoise(const std::vector<Dot>& signal, double t, double dt, double nu, double dnu,
+std::vector<Dot> generateNoise(int randSeed, const std::vector<Dot>& signal, double t, double dt, double nu, double dnu,
 	noiseForm form, bool polarity, std::vector<double> params);

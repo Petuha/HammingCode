@@ -9,7 +9,7 @@ form - форма импульса
 polarity - пол€рность (0 - однопол€рна€, 1 - бипол€рна€)
 params - дополнительные параметры дл€ формы импульса
 */
-std::vector<Dot> generateNoise(const std::vector<Dot>& signal, double t, double dt, double nu, double dnu,
+std::vector<Dot> generateNoise(int randSeed, const std::vector<Dot>& signal, double t, double dt, double nu, double dnu,
     noiseForm form, bool polarity, std::vector<double> params)
 {
     return std::vector<Dot>();
