@@ -1,8 +1,16 @@
 #include "SignalGenerator.h"
-
-std::vector<std::pair<double, double>> generateSignalFromBits(char* bits)
+/*
+bits - входная последовательность из 0 и 1 в строковом виде
+method - метод преобразования
+dt - шаг дискретизации
+A - амплитуда
+bitDuration - длительность битового интервала
+polarity - полярность (0 - прямая, 1 - инвертированная)
+*/
+std::vector<Dot> generateSignalFromBits(const std::string& bits,
+    conversionMethod method, double dt, double A, double bitDuration, bool polarity)
 {
-    std::vector<std::pair<double, double>> series;
+    std::vector<Dot> series;
     double r = 3, td = 0.05, h = 6;
     for (double x = 0; x <= 2 * r; x += td) series.emplace_back(x, sqrt(r * r - (x - r) * (x - r)));
     for (double x = 2 * r; x >= 0; x -= td) series.emplace_back(x, -sqrt(r * r - (x - r) * (x - r)));

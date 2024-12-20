@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{d2cb4d2f-3cc8-4d77-9924-e23306bb938c}</ProjectGuid>
-    <RootNamespace>SignalGenerator</RootNamespace>
+    <ProjectGuid>{fe50995d-d4ef-41fd-bf3f-57b1c2fed835}</ProjectGuid>
+    <RootNamespace>CoderDecoder</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -90,7 +90,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -131,10 +130,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="SignalGenerator.h" />
+    <ClInclude Include="CoderDecoder.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SignalGenerator.cpp" />
+    <ClCompile Include="CoderDecoder.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

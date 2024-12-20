@@ -5,12 +5,24 @@ VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HammingCode", "HammingCode\HammingCode.vcxproj", "{13EB6F85-14D7-405C-999C-0CEAF7669AA9}"
 	ProjectSection(ProjectDependencies) = postProject
+		{3C3CB25F-EF80-4A17-B350-711651F89A2D} = {3C3CB25F-EF80-4A17-B350-711651F89A2D}
+		{CE29E26F-EA61-4D43-8FA9-26A60281DE5B} = {CE29E26F-EA61-4D43-8FA9-26A60281DE5B}
 		{D2CB4D2F-3CC8-4D77-9924-E23306BB938C} = {D2CB4D2F-3CC8-4D77-9924-E23306BB938C}
+		{FE50995D-D4EF-41FD-BF3F-57B1C2FED835} = {FE50995D-D4EF-41FD-BF3F-57B1C2FED835}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SignalGenerator", "SignalGenerator\SignalGenerator.vcxproj", "{D2CB4D2F-3CC8-4D77-9924-E23306BB938C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NoiseGenerator", "NoiseGenerator\NoiseGenerator.vcxproj", "{3C3CB25F-EF80-4A17-B350-711651F89A2D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CoderDecoder", "CoderDecoder\CoderDecoder.vcxproj", "{FE50995D-D4EF-41FD-BF3F-57B1C2FED835}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3C3CB25F-EF80-4A17-B350-711651F89A2D} = {3C3CB25F-EF80-4A17-B350-711651F89A2D}
+		{CE29E26F-EA61-4D43-8FA9-26A60281DE5B} = {CE29E26F-EA61-4D43-8FA9-26A60281DE5B}
+		{D2CB4D2F-3CC8-4D77-9924-E23306BB938C} = {D2CB4D2F-3CC8-4D77-9924-E23306BB938C}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SignalIdentificator", "SignalIdentificator\SignalIdentificator.vcxproj", "{CE29E26F-EA61-4D43-8FA9-26A60281DE5B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +42,14 @@ Global
 		{3C3CB25F-EF80-4A17-B350-711651F89A2D}.Debug|x64.Build.0 = Debug|x64
 		{3C3CB25F-EF80-4A17-B350-711651F89A2D}.Release|x64.ActiveCfg = Release|x64
 		{3C3CB25F-EF80-4A17-B350-711651F89A2D}.Release|x64.Build.0 = Release|x64
+		{FE50995D-D4EF-41FD-BF3F-57B1C2FED835}.Debug|x64.ActiveCfg = Debug|x64
+		{FE50995D-D4EF-41FD-BF3F-57B1C2FED835}.Debug|x64.Build.0 = Debug|x64
+		{FE50995D-D4EF-41FD-BF3F-57B1C2FED835}.Release|x64.ActiveCfg = Release|x64
+		{FE50995D-D4EF-41FD-BF3F-57B1C2FED835}.Release|x64.Build.0 = Release|x64
+		{CE29E26F-EA61-4D43-8FA9-26A60281DE5B}.Debug|x64.ActiveCfg = Debug|x64
+		{CE29E26F-EA61-4D43-8FA9-26A60281DE5B}.Debug|x64.Build.0 = Debug|x64
+		{CE29E26F-EA61-4D43-8FA9-26A60281DE5B}.Release|x64.ActiveCfg = Release|x64
+		{CE29E26F-EA61-4D43-8FA9-26A60281DE5B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -29,9 +29,6 @@
     <QtUic Include="HammingCode.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtMoc Include="HammingCode.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <ClCompile Include="HammingCode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -40,5 +37,10 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="HammingCode.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>
