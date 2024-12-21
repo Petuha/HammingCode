@@ -88,8 +88,9 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>SignalGenerator.lib;NoiseGenerator.lib;CoderDecoder.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\12345\source\repos\HammingCode\x64\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -101,8 +102,9 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>SignalGenerator.lib;NoiseGenerator.lib;CoderDecoder.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\12345\source\repos\HammingCode\x64\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
       <AdditionalOptions>/NODEFAULTLIB:msvcrt.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
@@ -140,6 +142,20 @@
     <QtMoc Include="HammingCode.h" />
     <ClCompile Include="HammingCode.cpp" />
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CoderDecoder\CoderDecoder.vcxproj">
+      <Project>{fe50995d-d4ef-41fd-bf3f-57b1c2fed835}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\NoiseGenerator\NoiseGenerator.vcxproj">
+      <Project>{3c3cb25f-ef80-4a17-b350-711651f89a2d}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SignalGenerator\SignalGenerator.vcxproj">
+      <Project>{d2cb4d2f-3cc8-4d77-9924-e23306bb938c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SignalIdentificator\SignalIdentificator.vcxproj">
+      <Project>{ce29e26f-ea61-4d43-8fa9-26a60281de5b}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
