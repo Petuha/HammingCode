@@ -13,7 +13,7 @@ public:
 	HammingCodeHandler(std::string bits, int chunksize, bool modified,
 		conversionMethod signal_method, double signal_dt, double signal_A,
 		double signal_bitDuration, bool signal_polarity,
-		double noise_t, double noise_dt, double noise_nu, double noise_dnu,
+		double noise_t, double noise_dt, int noise_nu, int noise_dnu,
 		noiseForm noise_form, bool noise_polarity, std::vector<double> noise_params,
 		int iterations);
 	/*
@@ -37,8 +37,8 @@ private:
 
 	double noise_t;
 	double noise_dt;
-	double noise_nu;
-	double noise_dnu;
+	int noise_nu;
+	int noise_dnu;
 	noiseForm noise_form;
 	bool noise_polarity;
 	std::vector<double> noise_params;
