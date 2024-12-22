@@ -123,6 +123,37 @@ std::string hammingDecoder(const std::string& bits, int chunksize, bool modified
 	return res;
 }
 
-HammingCodeHandler::HammingCodeHandler(const std::string& bits, int chunksize, conversionMethod signal_method, double signal_dt, double signal_A, double signal_bitDuration, bool signal_polarity, double noise_t, double noise_dt, double noise_nu, double noise_dnu, noiseForm noise_form, bool noise_polarity, std::vector<double> params)
+HammingCodeHandler::HammingCodeHandler(std::string bits, int chunksize, bool modified,
+	conversionMethod signal_method, double signal_dt, double signal_A,
+	double signal_bitDuration, bool signal_polarity,
+	double noise_t, double noise_dt, double noise_nu, double noise_dnu,
+	noiseForm noise_form, bool noise_polarity, std::vector<double> noise_params,
+	int iterations) :
+	bits(std::move(bits)),
+	chunksize(chunksize),
+	modified(modified),
+	signal_method(signal_method),
+	signal_dt(signal_dt),
+	signal_A(signal_A),
+	signal_bitDuration(signal_bitDuration),
+	signal_polarity(signal_polarity),
+	noise_t(noise_t),
+	noise_dt(noise_dt),
+	noise_nu(noise_nu),
+	noise_dnu(noise_dnu),
+	noise_form(noise_form),
+	noise_polarity(noise_polarity),
+	noise_params(std::move(noise_params)),
+	iterations(iterations)
 {
+
+}
+
+std::vector<std::string> HammingCodeHandler::next()
+{
+	if (iteration == iterations) return {};
+
+	// do experiment
+
+	return std::vector<std::string>();
 }

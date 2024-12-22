@@ -1,5 +1,4 @@
 #include "HammingCode.h"
-#include "../CoderDecoder/CoderDecoder.h"
 #include <vector>
 
 template<class T>

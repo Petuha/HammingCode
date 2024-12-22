@@ -7,6 +7,7 @@
 #include <QtWidgets/Qwidget>
 #include <QtWidgets/QComboBox>
 #include "ui_HammingCode.h"
+#include "../CoderDecoder/CoderDecoder.h"
 
 class FocusWhellComboBox : public QComboBox
 {
@@ -40,7 +41,7 @@ protected slots:
 private:
     Ui::HammingCodeClass ui;
 
-    enum { plotN = 4, plotM = 2 };
+    enum { plotN = HammingCodeHandler::Plot::plotN, plotM = HammingCodeHandler::Plot::plotM };
     QLineSeries* series[plotN][plotM];
     QChart* chart[plotN][plotM];
     QChartView* chartview[plotN][plotM];
