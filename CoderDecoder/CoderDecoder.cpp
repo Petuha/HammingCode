@@ -1,10 +1,5 @@
 #include "CoderDecoder.h"
-/*
-bits - последовательность бит
-chunksize - размер блока
-modified - модифицированный/немодифицированный код Хэмминга
-*/
-std::string hammingCoder(const std::string& bits, int chunksize, bool modified) {
+int getcodedChunkSize(int chunksize, bool modified) {
 	auto additionalBits = [&]() -> int {
 		int n = 0, x = 1;
 		while (x <= chunksize + n) {
@@ -13,7 +8,15 @@ std::string hammingCoder(const std::string& bits, int chunksize, bool modified) 
 		}
 		return n;
 		};
-	int codedChunkSize = chunksize + additionalBits() + modified;
+	return chunksize + additionalBits() + modified;
+}
+/*
+bits - последовательность бит
+chunksize - размер блока
+modified - модифицированный/немодифицированный код Хэмминга
+*/
+std::string hammingCoder(const std::string& bits, int chunksize, bool modified) {
+	int codedChunkSize = getcodedChunkSize(chunksize, modified);
 	std::string res(bits.size() / chunksize * codedChunkSize, 0);
 	auto codeBlock = [&](int i) {
 		int cBit = 1;
@@ -51,16 +54,9 @@ std::string hammingCoder(const std::string& bits, int chunksize, bool modified) 
 	}
 	return res;
 }
-void hammingErrorRestorer(std::string& bits, int chunksize, bool modified) {
-	auto additionalBits = [&]() -> int {
-		int n = 0, x = 1;
-		while (x <= chunksize + n) {
-			++n;
-			x <<= 1;
-		}
-		return n;
-		};
-	int codedChunkSize = chunksize + additionalBits() + modified;
+void hammingErrorRestorer(std::string& bits, int chunksize, bool modified,
+	int* ErrorPtr = 0, std::string* correctStringPtr = 0) {
+	int codedChunkSize = getcodedChunkSize(chunksize, modified);
 	auto blockSyndrome = [&](int i) -> int {
 		int x, y;
 		int syndrome = 0;
@@ -77,9 +73,24 @@ void hammingErrorRestorer(std::string& bits, int chunksize, bool modified) {
 		};
 	for (int i = codedChunkSize; i <= bits.size(); i += codedChunkSize) {
 		int syndrome = blockSyndrome(i - codedChunkSize);
-
-		// some modified analyze should be here (for correct multi-errors recognition), maybe later
-
+		if (modified && ErrorPtr && correctStringPtr) {
+			int errors = 0;
+			for (int j = i - codedChunkSize; j < i; ++j) {
+				errors += bits[i] != (*correctStringPtr)[i];
+			}
+			if (bits[i - codedChunkSize] == '0' && syndrome == 0) {
+				*ErrorPtr += errors == 0;
+			}
+			else if (bits[i - codedChunkSize] != '0' && syndrome != 0) {
+				*ErrorPtr += errors == 1;
+			}
+			else if (bits[i - codedChunkSize] == '0' && syndrome != 0) {
+				*ErrorPtr += errors % 2 == 0;
+			}
+			else {
+				*ErrorPtr += errors % 2 != 0;
+			}
+		}
 		if (!syndrome) continue;
 		int index = i - codedChunkSize + modified + syndrome - 1;
 		bits[index] -= '0';
@@ -88,15 +99,7 @@ void hammingErrorRestorer(std::string& bits, int chunksize, bool modified) {
 	}
 }
 std::string hammingErrorCompressor(const std::string& bits, int chunksize, bool modified) {
-	auto additionalBits = [&]() -> int {
-		int n = 0, x = 1;
-		while (x <= chunksize + n) {
-			++n;
-			x <<= 1;
-		}
-		return n;
-		};
-	int codedChunkSize = chunksize + additionalBits() + modified;
+	int codedChunkSize = getcodedChunkSize(chunksize, modified);
 	std::string res(bits.size() / codedChunkSize * chunksize, 0);
 	auto compressBlock = [&](int i) {
 		int cBit = 1;
@@ -146,7 +149,8 @@ HammingCodeHandler::HammingCodeHandler(std::string bits, int chunksize, bool mod
 	noise_params(std::move(noise_params)),
 	iterations(iterations)
 {
-
+	experiments.reserve(iterations);
+	coded = hammingCoder(this->bits, chunksize, modified);
 }
 
 std::vector<std::string> HammingCodeHandler::next()
@@ -155,5 +159,112 @@ std::vector<std::string> HammingCodeHandler::next()
 
 	// do experiment
 
-	return std::vector<std::string>();
+	/*
+	Данные строки таблицы
+
+	номер итерации
+
+	последовательности:
+
+	принятая
+	с восстановленными ошибками
+	конечная
+
+	далее информация:
+
+	кол-во искажённых помехой бит
+	кол-во верно исправленных бит в закодированной последовательности
+	кол-во верно исправленных бит в декодированной последовательности
+	кол-во ошибок в декодированной последовательности
+	процент ошибок в декодированной последовательности
+
+	Если код модифицированный:
+
+	кол-во верных вердиктов добавочного бита
+	*/
+	std::vector<std::string> data(8 + modified);
+
+	std::vector<Dot> signal = generateSignalFromBits
+	(coded, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
+	signal = generateNoise
+	(iteration, signal, noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
+	std::string receivedBits = bitsFromSignal
+	(signal, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
+
+	if (receivedBits.size() != coded.size()) return {}; // something really bad, bitsFromSignal problem
+
+	int brokenBits = 0;
+	for (int i = 0; i < receivedBits.size(); ++i) {
+		brokenBits += coded[i] != receivedBits[i];
+	}
+
+	std::string receivedBitsRestored = receivedBits;
+	int correctModifiedVerdicts = 0;
+	if (modified) {
+		hammingErrorRestorer(receivedBitsRestored, chunksize, modified, &correctModifiedVerdicts, &coded);
+	}
+	else {
+		hammingErrorRestorer(receivedBitsRestored, chunksize, modified);
+	}
+
+	int correctRestoredBitsCoded = 0;
+	for (int i = 0; i < receivedBits.size(); ++i) {
+		correctRestoredBitsCoded += receivedBits[i] != receivedBitsRestored[i] && receivedBitsRestored[i] == coded[i];
+	}
+
+	std::string decodedBits = hammingErrorCompressor(receivedBitsRestored, chunksize, modified);
+
+	std::string compressedReceivedBits = hammingErrorCompressor(receivedBits, chunksize, modified);
+	int correctRestoredBitsDecoded = 0;
+	for (int i = 0; i < compressedReceivedBits.size(); ++i) {
+		correctRestoredBitsDecoded += decodedBits[i] != compressedReceivedBits[i] && compressedReceivedBits[i] == bits[i];
+	}
+	greatestCorrectRestored = std::max(greatestCorrectRestored, std::make_pair(correctRestoredBitsDecoded, iteration));
+	// free memory
+	compressedReceivedBits.clear();
+	compressedReceivedBits.shrink_to_fit();
+
+	int errorsDecoded = 0;
+	for (int i = 0; i < decodedBits.size(); ++i) {
+		errorsDecoded += decodedBits[i] != bits[i];
+	}
+
+	double errorPercent = 1.0 * errorsDecoded / decodedBits.size();
+
+	data[0] = std::to_string(iteration); // номер итерации
+	data[1] = std::move(receivedBits); // принятая
+	data[2] = std::move(receivedBitsRestored); // восстановленная
+	data[3] = std::move(decodedBits); // конечная
+	data[4] = std::to_string(brokenBits); // искажённые помехой
+	data[5] = std::to_string(correctRestoredBitsCoded); // верно исправленные в закодированной последовательности
+	data[6] = std::to_string(correctRestoredBitsDecoded); // верно исправленные в декодированной последовательности
+	data[7] = std::to_string(errorsDecoded); // ошибки в декодированной последовательности
+	data[8] = std::to_string(errorPercent); // процент ошибок в декодированной последовательности
+	if (modified) data[9] = std::to_string(correctModifiedVerdicts); // верные срабатывания проверочного бита
+
+
+	experiments.push_back({ errorPercent, iteration });
+	++iteration;
+
+	if (iteration == iterations) {
+		// prepare plots
+		sort(experiments.begin(), experiments.end());
+		auto addPlot = [&](int i, int seed) {
+			plots[i][0] = generateSignalFromBits
+			(bits, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
+			plots[i][0] = generateNoise
+			(seed, plots[i][0], noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
+
+			plots[i][1] = generateSignalFromBits
+			(coded, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
+			plots[i][1] = generateNoise
+			(seed, plots[i][1], noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
+			};
+		addPlot(0, experiments.rbegin()->second);
+		addPlot(1, experiments.begin()->second);
+		addPlot(2, experiments[experiments.size() / 2].second);
+		addPlot(3, greatestCorrectRestored.second);
+	}
+
+	return data;
 }

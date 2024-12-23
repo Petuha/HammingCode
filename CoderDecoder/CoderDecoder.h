@@ -1,9 +1,10 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <map>
+#include <algorithm>
 #include "../SignalGenerator/SignalGenerator.h"
 #include "../NoiseGenerator/NoiseGenerator.h"
+#include "../SignalIdentificator/SignalIdentificator.h"
 /*
 Класс, который будет моделировать эксперименты
 */
@@ -21,7 +22,7 @@ public:
 	if all iterations are done, returns empty vector
 	*/
 	std::vector<std::string> next();
-	std::vector<Dot> plots[(int)Plot::plotN][(int)Plot::plotM]; // 
+	std::vector<Dot> plots[(int)Plot::plotN][(int)Plot::plotM]; // all necessary plots
 private:
 	// base parameters
 
@@ -48,5 +49,7 @@ private:
 	// other parameters
 
 	int iteration = 0;
-	std::map<int, int> experiments; // errors - randSeed
+	std::vector<std::pair<double, int>> experiments; // errors - randSeed
+	std::pair<int, int> greatestCorrectRestored = { -1, -1 };
+	std::string coded;
 };
