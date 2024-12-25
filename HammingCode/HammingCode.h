@@ -12,6 +12,7 @@
 class FocusWhellComboBox : public QComboBox
 {
     Q_OBJECT
+
 public:
     explicit FocusWhellComboBox(QWidget* parent = nullptr)
         : QComboBox(parent)
@@ -21,9 +22,9 @@ public:
 
     void wheelEvent(QWheelEvent* e) override
     {
-        if (this->hasFocus()) {
-            QComboBox::wheelEvent(e);
-        }
+        //if (this->hasFocus()) {
+        //    QComboBox::wheelEvent(e);
+        //}
     }
 };
 
@@ -57,8 +58,11 @@ private:
     QLabel* plotSignalInfo;
     FocusWhellComboBox* plotSignalSelector;
 
-    QTableWidget* tableParams[3];
-    QLabel* label[3];
+    enum { tableN = 4 };
+    QTableWidget* tableParams[tableN];
+    QLabel* label[tableN];
+
+    FocusWhellComboBox* modifiedBox;
 
     FocusWhellComboBox* noiseTypeBox;
     FocusWhellComboBox* noisePolarBox;

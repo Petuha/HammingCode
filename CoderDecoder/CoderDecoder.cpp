@@ -1,4 +1,11 @@
 #include "CoderDecoder.h"
+
+// !!! must be done
+double getTrustLevel(int iterations) {
+
+	return 0;
+}
+
 int getcodedChunkSize(int chunksize, bool modified) {
 	auto additionalBits = [&]() -> int {
 		int n = 0, x = 1;
@@ -151,6 +158,7 @@ HammingCodeHandler::HammingCodeHandler(std::string bits, int chunksize, bool mod
 {
 	experiments.reserve(iterations);
 	coded = hammingCoder(this->bits, chunksize, modified);
+	trustlevel = getTrustLevel(iterations);
 }
 
 std::vector<std::string> HammingCodeHandler::next()

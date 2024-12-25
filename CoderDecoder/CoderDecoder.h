@@ -23,6 +23,7 @@ public:
 	*/
 	std::vector<std::string> next();
 	std::vector<Dot> plots[(int)Plot::plotN][(int)Plot::plotM]; // all necessary plots
+	double trustlevel;
 private:
 	// base parameters
 

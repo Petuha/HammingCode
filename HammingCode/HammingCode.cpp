@@ -35,7 +35,7 @@ HammingCode::HammingCode(QWidget* parent)
 
 	ui.setupUi(this);
 
-	this->setMinimumSize(1067, 600);
+	this->setMinimumSize(1280, 720);
 
 	// Plots
 	for (int i = 0; i < plotN; ++i) {
@@ -45,20 +45,23 @@ HammingCode::HammingCode(QWidget* parent)
 			chartview[i][j] = 0;
 		}
 	}
+
 	int windowH = ui.centralWidget->parentWidget()->geometry().height();
 	int windowW = ui.centralWidget->parentWidget()->geometry().width();
 
 
-	// Labels
-	label[0] = new QLabel("Код Хэмминга", ui.centralWidget);
-	label[1] = new QLabel("Сигнал", ui.centralWidget);
-	label[2] = new QLabel("Помеха", ui.centralWidget);
+	// Table labels
+	label[0] = new QLabel("Эксперимент", ui.centralWidget);
+	label[1] = new QLabel("Код Хэмминга", ui.centralWidget);
+	label[2] = new QLabel("Сигнал", ui.centralWidget);
+	label[3] = new QLabel("Помеха", ui.centralWidget);
 
 	// Table params
-	tableParams[0] = new QTableWidget(2, 2, ui.centralWidget);
-	tableParams[1] = new QTableWidget(5, 2, ui.centralWidget);
-	tableParams[2] = new QTableWidget(7, 2, ui.centralWidget);
-	for (int param = 0; param < 3; ++param) {
+	tableParams[1] = new QTableWidget(3, 2, ui.centralWidget);
+	tableParams[2] = new QTableWidget(5, 2, ui.centralWidget);
+	tableParams[3] = new QTableWidget(8, 2, ui.centralWidget);
+	tableParams[0] = new QTableWidget(1, 2, ui.centralWidget);
+	for (int param = 0; param < tableN; ++param) {
 		for (int i = 0; i < tableParams[param]->rowCount(); ++i) {
 			for (int j = 0; j < tableParams[param]->colorCount(); ++j) {
 				tableParams[param]->setItem(i, j, new QTableWidgetItem());
@@ -74,8 +77,8 @@ HammingCode::HammingCode(QWidget* parent)
 		tableParams[param]->setEditTriggers(QAbstractItemView::DoubleClicked);
 	}
 	auto setTableParamsLabel = [&]() {
-		int tableW = tableParams[0]->horizontalHeader()->defaultSectionSize();
-		int tableH = tableParams[0]->verticalHeader()->defaultSectionSize();
+		int tableW = tableParams[1]->horizontalHeader()->defaultSectionSize();
+		int tableH = tableParams[1]->verticalHeader()->defaultSectionSize();
 		int x = 10; // От балды
 		int y = 0;
 		auto setTableParams = [&](int i) {
@@ -87,7 +90,7 @@ HammingCode::HammingCode(QWidget* parent)
 			setX(label[i], x);
 			setY(label[i], y);
 			};
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 0; i < tableN; ++i) {
 			setLabel(i);
 			y += label[i]->geometry().height();
 			setTableParams(i);
@@ -99,30 +102,41 @@ HammingCode::HammingCode(QWidget* parent)
 	// Set table values
 
 	// Hamming values
-	tableParams[0]->item(0, 0)->setText("Последовательность");
-	tableParams[0]->item(1, 0)->setText("Размер блока");
+	tableParams[1]->item(0, 0)->setText("Последовательность");
+	tableParams[1]->item(1, 0)->setText("Размер блока");
+	tableParams[1]->item(2, 0)->setText("Модифицированный");
 
 	// Signal values
-	tableParams[1]->item(0, 0)->setText("Метод преобразования");
-	tableParams[1]->item(1, 0)->setText("Шаг дискретизации");
-	tableParams[1]->item(2, 0)->setText("Амплитуда");
-	tableParams[1]->item(3, 0)->setText("Длительность битового интервала");
-	tableParams[1]->item(4, 0)->setText("Полярность");
+	tableParams[2]->item(0, 0)->setText("Метод преобразования");
+	tableParams[2]->item(1, 0)->setText("Шаг дискретизации");
+	tableParams[2]->item(2, 0)->setText("Амплитуда");
+	tableParams[2]->item(3, 0)->setText("Длительность битового интервала");
+	tableParams[2]->item(4, 0)->setText("Полярность");
 
 	// Noise values
 	{
 		QSize cellSize;
-		cellSize.setWidth(tableParams[0]->horizontalHeader()->defaultSectionSize());
-		cellSize.setHeight(tableParams[0]->verticalHeader()->defaultSectionSize());
-		tableParams[2]->setIconSize(cellSize);
+		cellSize.setWidth(tableParams[1]->horizontalHeader()->defaultSectionSize());
+		cellSize.setHeight(tableParams[1]->verticalHeader()->defaultSectionSize());
+		tableParams[3]->setIconSize(cellSize);
 	}
-	tableParams[2]->item(0, 0)->setIcon(htmlText("<math>t</math>"));
-	tableParams[2]->item(1, 0)->setIcon(htmlText("<math>&Delta;t</math>"));
-	tableParams[2]->item(2, 0)->setIcon(htmlText("<math>&nu;</math>"));
-	tableParams[2]->item(3, 0)->setIcon(htmlText("<math>&Delta;&nu;</math>"));
-	tableParams[2]->item(4, 0)->setIcon(htmlText("<math>Форма</math>"));
-	tableParams[2]->item(5, 0)->setIcon(htmlText("<math>Полярность</math>"));
-	tableParams[2]->item(6, 0)->setIcon(htmlText("<math>a</math>"));
+	tableParams[3]->item(0, 0)->setIcon(htmlText("<math>t</math>"));
+	tableParams[3]->item(1, 0)->setIcon(htmlText("<math>&Delta;t</math>"));
+	tableParams[3]->item(2, 0)->setIcon(htmlText("<math>&nu;</math>"));
+	tableParams[3]->item(3, 0)->setIcon(htmlText("<math>&Delta;&nu;</math>"));
+	tableParams[3]->item(4, 0)->setIcon(htmlText("<math>Форма</math>"));
+	tableParams[3]->item(5, 0)->setIcon(htmlText("<math>Полярность</math>"));
+	tableParams[3]->item(6, 0)->setIcon(htmlText("<math>a</math>"));
+	tableParams[3]->item(7, 0)->setIcon(htmlText("<math>&Delta;a</math>"));
+
+	// Experiment values
+	tableParams[0]->item(0, 0)->setText("Число итераций");
+
+	// Hamming QCombos
+	modifiedBox = new FocusWhellComboBox(ui.centralWidget);
+	modifiedBox->addItem("Да");
+	modifiedBox->addItem("Нет");
+	tableParams[1]->setCellWidget(2, 1, modifiedBox);
 
 	// Signal Qcombos
 	signalMethodBox = new FocusWhellComboBox(ui.centralWidget);
@@ -130,25 +144,25 @@ HammingCode::HammingCode(QWidget* parent)
 	signalMethodBox->addItem("Манчестерский");
 	signalMethodBox->addItem("RZ");
 	signalMethodBox->addItem("AMI");
-	tableParams[1]->setCellWidget(0, 1, signalMethodBox);
+	tableParams[2]->setCellWidget(0, 1, signalMethodBox);
 
 	signalPolarBox = new FocusWhellComboBox(ui.centralWidget);
 	signalPolarBox->addItem("Прямая");
 	signalPolarBox->addItem("Инвертированная");
-	tableParams[1]->setCellWidget(4, 1, signalPolarBox);
+	tableParams[2]->setCellWidget(4, 1, signalPolarBox);
 
 	// Noise Qcombos
 	noiseTypeBox = new FocusWhellComboBox(ui.centralWidget);
-	noiseTypeBox->setIconSize(tableParams[2]->iconSize());
+	noiseTypeBox->setIconSize(tableParams[3]->iconSize());
 	noiseTypeBox->addItem(QIcon(htmlText("<math>a</math>")), "");
 	noiseTypeBox->addItem(QIcon(htmlText("<math>a sin(bx)</math>")), "");
 	noiseTypeBox->addItem(QIcon(htmlText("<math>ax<sup>2</sup></math>")), "");
-	tableParams[2]->setCellWidget(4, 1, noiseTypeBox);
+	tableParams[3]->setCellWidget(4, 1, noiseTypeBox);
 
 	noisePolarBox = new FocusWhellComboBox(ui.centralWidget);
 	noisePolarBox->addItem("Однополярный");
 	noisePolarBox->addItem("Биполярный");
-	tableParams[2]->setCellWidget(5, 1, noisePolarBox);
+	tableParams[3]->setCellWidget(5, 1, noisePolarBox);
 
 	// Calculate button
 	setX(ui.calculate, tableParams[0]->width() + 30);
@@ -171,7 +185,7 @@ HammingCode::HammingCode(QWidget* parent)
 	plotSignalInfo->hide();
 
 	plotSignalSelector = new FocusWhellComboBox(ui.centralWidget);
-	plotSignalSelector->addItem("Отправляеый");
+	plotSignalSelector->addItem("Отправляемый");
 	plotSignalSelector->addItem("Принимаемый");
 	plotSignalSelector->hide();
 
@@ -203,10 +217,16 @@ HammingCode::HammingCode(QWidget* parent)
 	plotLayout = new QHBoxLayout(plotWidget);
 	plotLayout->setContentsMargins(0, 0, 0, 0);
 
+	// connects
 	connect(noiseTypeBox, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::noiseChanged);
 	connect(plotErrorSelector, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::plotChanged);
 	connect(plotSignalSelector, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::plotChanged);
+	for (int i = 0; i < tableN; ++i) {
+		connect(tableParams[i], &QTableWidget::clicked, tableParams[i],
+			QOverload<const QModelIndex&>::of(&QTableWidget::edit));
+	}
 
+	// hide status bar
 	this->setStatusBar(0);
 }
 
@@ -219,21 +239,32 @@ void HammingCode::noiseChanged(int index)
 {
 	static int pindex = -1;
 	if (index == 1) {
-		tableParams[2]->setRowCount(tableParams[2]->rowCount() + 1);
-		tableParams[2]->setItem(tableParams[2]->rowCount() - 1, 0, new QTableWidgetItem());
-		tableParams[2]->setItem(tableParams[2]->rowCount() - 1, 1, new QTableWidgetItem());
-		tableParams[2]->item(tableParams[2]->rowCount() - 1, 0)->setFlags(Qt::ItemIsEnabled);
-		tableParams[2]->item(tableParams[2]->rowCount() - 1, 0)->setIcon(htmlText("<math>b</math>"));
-		setHeight(tableParams[2],
-			tableParams[2]->height() + tableParams[2]->verticalHeader()->defaultSectionSize());
+		tableParams[3]->setRowCount(tableParams[3]->rowCount() + 2);
+
+		tableParams[3]->setItem(tableParams[3]->rowCount() - 2, 0, new QTableWidgetItem());
+		tableParams[3]->setItem(tableParams[3]->rowCount() - 2, 1, new QTableWidgetItem());
+		tableParams[3]->setItem(tableParams[3]->rowCount() - 1, 0, new QTableWidgetItem());
+		tableParams[3]->setItem(tableParams[3]->rowCount() - 1, 1, new QTableWidgetItem());
+
+		tableParams[3]->item(tableParams[3]->rowCount() - 2, 0)->setFlags(Qt::ItemIsEnabled);
+		tableParams[3]->item(tableParams[3]->rowCount() - 2, 0)->setIcon(htmlText("<math>b</math>"));
+		tableParams[3]->item(tableParams[3]->rowCount() - 1, 0)->setFlags(Qt::ItemIsEnabled);
+		tableParams[3]->item(tableParams[3]->rowCount() - 1, 0)->setIcon(htmlText("<math>&Delta;b</math>"));
+
+		setHeight(tableParams[3],
+			tableParams[3]->height() + 2 * tableParams[3]->verticalHeader()->defaultSectionSize());
 	}
 	else {
 		if (pindex == 1) {
-			delete tableParams[2]->item(tableParams[2]->rowCount() - 1, 0);
-			delete tableParams[2]->item(tableParams[2]->rowCount() - 1, 1);
-			setHeight(tableParams[2],
-				tableParams[2]->height() - tableParams[2]->verticalHeader()->defaultSectionSize());
-			tableParams[2]->setRowCount(tableParams[2]->rowCount() - 1);
+			delete tableParams[3]->item(tableParams[3]->rowCount() - 2, 0);
+			delete tableParams[3]->item(tableParams[3]->rowCount() - 2, 1);
+			delete tableParams[3]->item(tableParams[3]->rowCount() - 1, 0);
+			delete tableParams[3]->item(tableParams[3]->rowCount() - 1, 1);
+
+			setHeight(tableParams[3],
+				tableParams[3]->height() - 2 * tableParams[3]->verticalHeader()->defaultSectionSize());
+
+			tableParams[3]->setRowCount(tableParams[3]->rowCount() - 2);
 		}
 	}
 	pindex = index;
@@ -259,6 +290,136 @@ void HammingCode::plotChanged(int index)
 
 void HammingCode::calculate_clicked()
 {
+	// passed parameters check
+	{
+		// set backgrounds
+		auto setWhiteBg = [&](int ti, int i, int j) {
+			for (i; i < j; ++i) {
+				tableParams[ti]->item(i, 1)->setBackground(Qt::white);
+			}
+			};
+		setWhiteBg(0, 0, 1);
+		setWhiteBg(1, 0, 2);
+		setWhiteBg(2, 1, 4);
+		setWhiteBg(3, 0, 4);
+		setWhiteBg(3, 6, tableParams[3]->rowCount());
+
+		// now check
+		auto correctInt = [](const QString& s) -> bool {
+			if (!s.size()) return 0; // empty string
+			bool start = 1;
+			for (QChar c : s) {
+				if (c < '0' || c > '9') {
+					if (!(start && c == '-')) return 0; // minus can be only at start
+				}
+				start = 0;
+			}
+			return 1;
+			};
+		auto correctDouble = [](const QString& s) -> bool {
+			if (!s.size()) return 0; // empty string
+			if (*s.begin() == '.' || *s.rbegin() == '.') return 0; // can't start or end with dot
+			bool hasDot = 0, start = 1;
+			for (QChar c : s) {
+				if (c < '0' || c > '9') { // not digit
+					if (c == '.') { // 1 dot allowed
+						if (hasDot) return 0; // 2 dots not allowed
+						hasDot = 1;
+					}
+					else if (c == '-') {
+						if (!start) return 0; // minus can be only at start
+					}
+					else return 0;
+				}
+				start = 0;
+			}
+			return 1;
+			};
+		auto correctBits = [](const QString& s) -> bool {
+			if (!s.size()) return 0; // empty string
+			for (QChar c : s) {
+				if (c != '0' && c != '1') return 0;
+			}
+			return 1;
+			};
+		auto positiveInteger = [&](const QString& s) -> bool {
+			if (!correctInt(s)) return 0;
+			return s.toInt() > 0;
+			};
+		auto nonNegativeInteger = [&](const QString& s) -> bool {
+			if (!correctInt(s)) return 0;
+			return s.toInt() >= 0;
+			};
+		auto positiveDouble = [&](const QString& s) -> bool {
+			if (!correctDouble(s)) return 0;
+			return s.toDouble() > 0;
+			};
+		auto nonNegativeDouble = [&](const QString& s) -> bool {
+			if (!correctDouble(s)) return 0;
+			return s.toDouble() >= 0;
+			};
+		auto correctChunkSize = [&](const QString& s, int bitsSize) -> bool {
+			if (!positiveInteger(s)) return 0;
+			return bitsSize % s.toInt() == 0;
+			};
+
+		if (!positiveInteger(tableParams[0]->item(0, 1)->text())) {
+			tableParams[0]->item(0, 1)->setBackground(Qt::red);
+			return;
+		}
+
+		if (!correctBits(tableParams[1]->item(0, 1)->text())) {
+			tableParams[1]->item(0, 1)->setBackground(Qt::red);
+			return;
+		}
+
+		if (!correctChunkSize(tableParams[1]->item(1, 1)->text(), tableParams[1]->item(0, 1)->text().size())) {
+			tableParams[1]->item(1, 1)->setBackground(Qt::red);
+			return;
+		}
+
+		auto checkTablePositiveDouble = [&](int ti, int i, int j) -> bool {
+			for (i; i < j; ++i) {
+				if (!positiveDouble(tableParams[ti]->item(i, 1)->text())) {
+					tableParams[ti]->item(i, 1)->setBackground(Qt::red);
+					return 1;
+				}
+			}
+			return 0;
+			};
+		auto checkTableCorrectDouble = [&](int ti, int i, int j) -> bool {
+			for (i; i < j; ++i) {
+				if (!correctDouble(tableParams[ti]->item(i, 1)->text())) {
+					tableParams[ti]->item(i, 1)->setBackground(Qt::red);
+					return 1;
+				}
+			}
+			return 0;
+			};
+		auto checkNoiseParams = [&]() -> bool {
+			for (int i = 6, parity = 0; i < tableParams[3]->rowCount(); ++i, ++parity) {
+				if (parity % 2 == 0) {
+					if (!correctDouble(tableParams[3]->item(i, 1)->text())) {
+						tableParams[3]->item(i, 1)->setBackground(Qt::red);
+						return 1;
+					}
+				}
+				else {
+					if (!positiveDouble(tableParams[3]->item(i, 1)->text())) {
+						tableParams[3]->item(i, 1)->setBackground(Qt::red);
+						return 1;
+					}
+				}
+			}
+			return 0;
+			};
+		if (checkTablePositiveDouble(2, 1, 4)) return;
+		if (checkTablePositiveDouble(3, 0, 4)) return;
+		if (checkNoiseParams()) return;
+	}
+
+	// !!! pop-up window with task should be here
+
 	//ui.statusBar->showMessage(QString("some text"));
 	plotErrorInfo->show();
 	plotErrorSelector->show();
@@ -281,6 +442,44 @@ void HammingCode::calculate_clicked()
 		}
 	}
 
+	// get params from input
+	std::string bits = tableParams[1]->item(0, 1)->text().toStdString();
+	int chunksize = tableParams[1]->item(1, 1)->text().toInt();
+	bool modified = modifiedBox->currentIndex();
+	conversionMethod signal_method = (conversionMethod)signalMethodBox->currentIndex();
+	double signal_dt = tableParams[2]->item(1, 1)->text().toDouble();
+	double signal_A = tableParams[2]->item(2, 1)->text().toDouble();
+	double signal_bitDuration = tableParams[2]->item(3, 1)->text().toDouble();
+	bool signal_polarity = signalPolarBox->currentIndex();
+	double noise_t = tableParams[3]->item(0, 1)->text().toDouble();
+	double noise_dt = tableParams[3]->item(1, 1)->text().toDouble();
+	int noise_nu = tableParams[3]->item(2, 1)->text().toInt();
+	int noise_dnu = tableParams[3]->item(3, 1)->text().toInt();
+	noiseForm noise_form = (noiseForm)noiseTypeBox->currentIndex();
+	bool noise_polarity = noisePolarBox->currentIndex();
+	std::vector<double> noise_params;
+	for (int i = 6; i < tableParams[3]->rowCount(); ++i) {
+		noise_params.push_back(tableParams[3]->item(i, 1)->text().toDouble());
+	}
+	int iterations = tableParams[0]->item(0, 1)->text().toInt();
+
+	// start experiments
+
+	HammingCodeHandler handler(
+		bits, chunksize, modified,
+		signal_method, signal_dt, signal_A,
+		signal_bitDuration, signal_polarity,
+		noise_t, noise_dt, noise_nu, noise_dnu,
+		noise_form, noise_polarity, noise_params,
+		iterations);
+	std::vector<std::string> tableData;
+	do {
+		tableData = handler.next();
+		// !!! add data to table
+
+	} while (tableData.size());
+	// !!! add handler.trustlevel to table or to another place
+	// add plots to view
 	auto newPlot = [&](int i, int j, const std::vector<Dot>& data) {
 		series[i][j] = new QLineSeries;
 		double margin = 3, minY = 0, minX = 0, maxY = 0, maxX = 0;
@@ -309,18 +508,11 @@ void HammingCode::calculate_clicked()
 		chartview[i][j] = new QChartView(chart[i][j]);
 		chartview[i][j]->setRenderHint(QPainter::Antialiasing);
 		};
-
-	newPlot(0, 0, generateSignalFromBits("", conversionMethod::AMI, 0, 0, 0, 0));
-	std::vector<Dot> d = { {0, 0}, {0, 1}, {1, 1} };
-	newPlot(1, 1, d);
 	for (int i = 0; i < plotN; ++i) {
 		for (int j = 0; j < plotM; ++j) {
-			if (i == 0 && j == 0 || i == 1 && j == 1) continue;
-			newPlot(i, j, {});
+			newPlot(i, j, handler.plots[i][j]);
 		}
 	}
-
-
 	plotLayout->addWidget(chartview[0][0]);
 	pchartview = chartview[0][0];
 }
