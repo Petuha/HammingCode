@@ -62,7 +62,7 @@ std::string hammingCoder(const std::string& bits, int chunksize, bool modified) 
 	return res;
 }
 void hammingErrorRestorer(std::string& bits, int chunksize, bool modified,
-	int* ErrorPtr = 0, std::string* correctStringPtr = 0) {
+	int* ErrorPtr = 0, std::string* correctStringPtr = 0, TaskManager::ModifiedVerdict* verdict = 0) {
 	int codedChunkSize = getcodedChunkSize(chunksize, modified);
 	auto blockSyndrome = [&](int i) -> int {
 		int x, y;
@@ -80,22 +80,45 @@ void hammingErrorRestorer(std::string& bits, int chunksize, bool modified,
 		};
 	for (int i = codedChunkSize; i <= bits.size(); i += codedChunkSize) {
 		int syndrome = blockSyndrome(i - codedChunkSize);
-		if (modified && ErrorPtr && correctStringPtr) {
-			int errors = 0;
-			for (int j = i - codedChunkSize; j < i; ++j) {
-				errors += bits[i] != (*correctStringPtr)[i];
-			}
-			if (bits[i - codedChunkSize] == '0' && syndrome == 0) {
-				*ErrorPtr += errors == 0;
-			}
-			else if (bits[i - codedChunkSize] != '0' && syndrome != 0) {
-				*ErrorPtr += errors == 1;
-			}
-			else if (bits[i - codedChunkSize] == '0' && syndrome != 0) {
-				*ErrorPtr += errors % 2 == 0;
+		if (modified) {
+			int syndromeP = 0;
+			if (ErrorPtr && correctStringPtr) {
+				int errors = 0;
+				for (int j = i - codedChunkSize; j < i; ++j) {
+					errors += bits[j] != (*correctStringPtr)[j];
+					syndromeP ^= bits[j] - '0';
+				}
+				if (syndromeP == 0 && syndrome == 0) {
+					*ErrorPtr += errors == 0;
+				}
+				else if (syndromeP != 0 && syndrome == 0) {
+					*ErrorPtr += errors == 1;
+				}
+				else if (syndromeP == 0 && syndrome != 0) {
+					*ErrorPtr += errors % 2 == 0;
+				}
+				else {
+					*ErrorPtr += errors % 2 != 0;
+				}
 			}
 			else {
-				*ErrorPtr += errors % 2 != 0;
+				for (int j = i - codedChunkSize; j < i; ++j) {
+					syndromeP ^= bits[j] - '0';
+				}
+			}
+			if (verdict) {
+				if (syndromeP == 0 && syndrome == 0) {
+					*verdict = TaskManager::ModifiedVerdict::noError;
+				}
+				else if (syndromeP != 0 && syndrome == 0) {
+					*verdict = TaskManager::ModifiedVerdict::oneError;
+				}
+				else if (syndromeP == 0 && syndrome != 0) {
+					*verdict = TaskManager::ModifiedVerdict::evenError;
+				}
+				else {
+					*verdict = TaskManager::ModifiedVerdict::oddError;
+				}
 			}
 		}
 		if (!syndrome) continue;
@@ -126,9 +149,10 @@ std::string hammingErrorCompressor(const std::string& bits, int chunksize, bool 
 	}
 	return res;
 }
-std::string hammingDecoder(const std::string& bits, int chunksize, bool modified) {
+std::string hammingDecoder(const std::string& bits, int chunksize, bool modified,
+	TaskManager::ModifiedVerdict* verdict = 0) {
 	std::string res = bits;
-	hammingErrorRestorer(res, chunksize, modified);
+	hammingErrorRestorer(res, chunksize, modified, 0, 0, verdict);
 	res = hammingErrorCompressor(res, chunksize, modified);
 	return res;
 }
@@ -275,4 +299,61 @@ std::vector<std::string> HammingCodeHandler::next()
 	}
 
 	return data;
+}
+
+TaskManager::TaskManager() :
+	rng(std::mt19937(time(0))),
+	rnum(std::uniform_int_distribution<std::mt19937::result_type>(4, 20)),
+	task(std::vector<std::string>(3))
+{
+	task[1] = task[2] = "0";
+}
+
+bool TaskManager::hasTasks()
+{
+	return task_num < 4;
+}
+
+bool TaskManager::newTask()
+{
+	if (task_num >= 4 || ansToTask != "") return 0;
+	auto randBits = [&]() -> std::string {
+		int n = rnum(rng);
+		std::string ret(n, '0');
+		for (int i = 0; i < n; ++i) {
+			ret[i] = '0' + rnum(rng) % 2;
+		}
+		return ret;
+		};
+	task[0] = randBits();
+	task[1][0] = '0' + task_num % 2;
+	task[2][0] = '0' + task_num / 2 % 2;
+	ModifiedVerdict verdict = ModifiedVerdict::nonModified;
+	if (task[2][0] == '1') {
+		if (task[1][0] == '0') {
+			ansToTask = hammingCoder(task[0], task[0].size(), 1);
+		}
+		else {
+			ansToTask = hammingDecoder(task[0], task[0].size(), 1, &verdict);
+		}
+	}
+	else {
+		if (task[1][0] == '0') {
+			ansToTask = hammingCoder(task[0], task[0].size(), 0);
+		}
+		else {
+			ansToTask = hammingDecoder(task[0], task[0].size(), 0);
+		}
+	}
+	return 1;
+}
+
+bool TaskManager::checkAnswer(const std::string& ans, ModifiedVerdict verdict)
+{
+	if (ans == ansToTask && verdict == verdictTotask) {
+		++task_num;
+		ansToTask = "";
+		return 1;
+	}
+	return 0;
 }

@@ -5,6 +5,7 @@
 #include "../SignalGenerator/SignalGenerator.h"
 #include "../NoiseGenerator/NoiseGenerator.h"
 #include "../SignalIdentificator/SignalIdentificator.h"
+#include <random>
 /*
  ласс, который будет моделировать эксперименты
 */
@@ -53,4 +54,40 @@ private:
 	std::vector<std::pair<double, int>> experiments; // errors - randSeed
 	std::pair<int, int> greatestCorrectRestored = { -1, -1 };
 	std::string coded;
+};
+
+/*
+ ласс, отвечающий за задачи по кодированию и декодированию
+*/
+class TaskManager {
+public:
+	TaskManager();
+	enum class ModifiedVerdict {
+		noError,
+		oneError,
+		evenError,
+		oddError,
+		nonModified
+	};
+	bool hasTasks();
+	/*
+	”станавливает значени€ в вектор строк задани€
+	возвращает 1, если новое задание утсановлено
+	возвращает 0, если новое задание не утсановлено
+	*/
+	bool newTask();
+	bool checkAnswer(const std::string& ans, ModifiedVerdict verdict);
+	/*
+	¬ектор строк задани€:
+	[0] - последовательность бит
+	[1] - тип задачи: кодирование(0), декодирование(1)
+	[2] - модифицированный (1) или нет (0) код хэмминга
+	*/
+	std::vector<std::string> task;
+private:
+	int task_num = 0;
+	std::string ansToTask = "";
+	ModifiedVerdict verdictTotask = ModifiedVerdict::nonModified;
+	std::mt19937 rng;
+	std::uniform_int_distribution<std::mt19937::result_type> rnum;
 };

@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="TaskViewer.cpp" />
     <QtRcc Include="HammingCode.qrc" />
     <QtUic Include="HammingCode.ui" />
     <QtMoc Include="HammingCode.h" />

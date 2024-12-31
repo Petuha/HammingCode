@@ -228,6 +228,27 @@ HammingCode::HammingCode(QWidget* parent)
 
 	// hide status bar
 	this->setStatusBar(0);
+
+	// task viewer
+	taskWidget = new QWidget(ui.centralWidget);
+	setWidth(taskWidget, plotWidget->geometry().width() / 2);
+	setHeight(taskWidget, plotWidget->geometry().height() / 2);
+	setX(taskWidget, plotWidget->x() + (plotWidget->width() - taskWidget->width()) / 2);
+	setY(taskWidget, plotWidget->y() + (plotWidget->height() - taskWidget->height()) / 2);
+	//taskWidget->setStyleSheet("background-color: lightblue;");
+	task = new TaskViewer(taskWidget, *this);
+
+	// set default params
+	auto setDeafaultTableParams = [](QTableWidget* table, int i, int j) {
+		for (i; i < j; ++i) {
+			table->item(i, 1)->setText("1");
+		}
+		};
+	setDeafaultTableParams(tableParams[0], 0, 1);
+	setDeafaultTableParams(tableParams[1], 0, 2);
+	setDeafaultTableParams(tableParams[2], 1, 4);
+	setDeafaultTableParams(tableParams[3], 0, 4);
+	setDeafaultTableParams(tableParams[3], 6, tableParams[3]->rowCount());
 }
 
 
@@ -419,8 +440,22 @@ void HammingCode::calculate_clicked()
 	}
 
 	// !!! pop-up window with task should be here
-
-	//ui.statusBar->showMessage(QString("some text"));
+	if (task->newTask()) {
+		plotErrorInfo->hide();
+		plotErrorSelector->hide();
+		plotErrorSelector->setCurrentIndex(0);
+		plotSignalInfo->hide();
+		plotSignalSelector->hide();
+		plotSignalSelector->setCurrentIndex(0);
+		if (pchartview) {
+			plotLayout->removeWidget(pchartview);
+			pchartview->setParent(0);
+			pchartview = 0;
+		}
+		task->show();
+		return;
+	}
+	task->hide();
 	plotErrorInfo->show();
 	plotErrorSelector->show();
 	plotErrorSelector->setCurrentIndex(0);
@@ -430,6 +465,7 @@ void HammingCode::calculate_clicked()
 	if (pchartview) {
 		plotLayout->removeWidget(pchartview);
 		pchartview->setParent(0);
+		pchartview = 0;
 	}
 	for (int i = 0; i < plotN; ++i) {
 		for (int j = 0; j < plotM; ++j) {
