@@ -303,7 +303,7 @@ std::vector<std::string> HammingCodeHandler::next()
 
 TaskManager::TaskManager() :
 	rng(std::mt19937(time(0))),
-	rnum(std::uniform_int_distribution<std::mt19937::result_type>(4, 20)),
+	rnum(std::uniform_int_distribution<std::mt19937::result_type>(4, 16)),
 	task(std::vector<std::string>(3))
 {
 	task[1] = task[2] = "0";
@@ -325,16 +325,24 @@ bool TaskManager::newTask()
 		}
 		return ret;
 		};
-	task[0] = randBits();
 	task[1][0] = '0' + task_num % 2;
 	task[2][0] = '0' + task_num / 2 % 2;
-	ModifiedVerdict verdict = ModifiedVerdict::nonModified;
+	task[0] = randBits();
+	verdictTotask = ModifiedVerdict::nonModified;
 	if (task[2][0] == '1') {
 		if (task[1][0] == '0') {
 			ansToTask = hammingCoder(task[0], task[0].size(), 1);
 		}
 		else {
-			ansToTask = hammingDecoder(task[0], task[0].size(), 1, &verdict);
+			int chunkSize = task[0].size();
+			task[0] = hammingCoder(task[0], chunkSize, 1);
+			for (char& c : task[0]) {
+				c -= '0';
+				c += rnum(rng) % 2;
+				c %= 2;
+				c += '0';
+			}
+			ansToTask = hammingDecoder(task[0], chunkSize, 1, &verdictTotask);
 		}
 	}
 	else {
@@ -342,7 +350,15 @@ bool TaskManager::newTask()
 			ansToTask = hammingCoder(task[0], task[0].size(), 0);
 		}
 		else {
-			ansToTask = hammingDecoder(task[0], task[0].size(), 0);
+			int chunkSize = task[0].size();
+			task[0] = hammingCoder(task[0], chunkSize, 0);
+			for (char& c : task[0]) {
+				c -= '0';
+				c += rnum(rng) % 2;
+				c %= 2;
+				c += '0';
+			}
+			ansToTask = hammingDecoder(task[0], chunkSize, 0);
 		}
 	}
 	return 1;

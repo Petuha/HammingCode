@@ -49,9 +49,9 @@ TaskViewer::TaskViewer(QWidget* parent, HammingCode& mainClass) :
 	table->setGeometry(0, taskLabel->y() + taskLabel->height(), parent->width(), 2 * tableHeight);
 	answerLabel->setGeometry(0, table->y() + table->height() + 10, parent->width() / 2, tableHeight);
 	verdictLabel->setGeometry
-	(parent->width() - verdictLabel->width(), answerLabel->y(), verdictLabel->width(), answerLabel->height());
+	(parent->width() / 2, answerLabel->y(), parent->width() / 2, answerLabel->height());
 	verdictBox->setGeometry
-	(verdictLabel->x(), verdictLabel->y() + answerLabel->y() + answerLabel->height() + 10,
+	(verdictLabel->x(), verdictLabel->y() + verdictLabel->height(),
 		verdictLabel->width(), verdictLabel->height());
 	answer->setGeometry
 	(0, answerLabel->y() + answerLabel->height(), parent->width() - verdictBox->width(), tableHeight);
@@ -93,7 +93,7 @@ void TaskViewer::show()
 	table->show();
 	answer->show();
 	checkButton->show();
-	if (table->item(1, 2)->text() == "Модифицированный") {
+	if (manager.task[1] == "1" && manager.task[2] == "1") {
 		verdictLabel->show();
 		verdictBox->show();
 	}
@@ -119,6 +119,7 @@ bool TaskViewer::newTask()
 		hasTask = 1;
 		manager.newTask();
 		answer->item(0, 0)->setText("");
+		verdictBox->setCurrentIndex(0);
 		table->item(1, 0)->setText(QString::fromStdString(manager.task[0]));
 		if (manager.task[1] == "1") {
 			table->item(1, 1)->setText("Декодирование");
@@ -138,9 +139,10 @@ bool TaskViewer::newTask()
 }
 
 void TaskViewer::check() {
-	if (table->item(1, 2)->text() == "Модифицированный") {
+	if (manager.task[2] == "1") {
 		if (manager.checkAnswer(answer->item(0, 0)->text().toStdString(),
-			(TaskManager::ModifiedVerdict)verdictBox->currentIndex())) {
+			manager.task[1] == "1" ?
+			(TaskManager::ModifiedVerdict)verdictBox->currentIndex() : TaskManager::ModifiedVerdict::nonModified)) {
 			hasTask = 0;
 			// execute plot view
 			mainClass.calculate_clicked();
