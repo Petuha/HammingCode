@@ -77,6 +77,9 @@ HammingCode::HammingCode(QWidget* parent)
 		tableParams[param]->setEditTriggers(QAbstractItemView::DoubleClicked);
 	}
 	auto setTableParamsLabel = [&]() {
+		for (int i = 0; i < tableN; ++i) {
+			tableParams[i]->horizontalHeader()->setDefaultSectionSize(150);
+		}
 		int tableW = tableParams[1]->horizontalHeader()->defaultSectionSize();
 		int tableH = tableParams[1]->verticalHeader()->defaultSectionSize();
 		int x = 10; // От балды
@@ -110,7 +113,7 @@ HammingCode::HammingCode(QWidget* parent)
 	tableParams[2]->item(0, 0)->setText("Метод преобразования");
 	tableParams[2]->item(1, 0)->setText("Шаг дискретизации");
 	tableParams[2]->item(2, 0)->setText("Амплитуда");
-	tableParams[2]->item(3, 0)->setText("Длительность битового интервала");
+	tableParams[2]->item(3, 0)->setText("Битовый интервал");
 	tableParams[2]->item(4, 0)->setText("Полярность");
 
 	// Noise values
@@ -189,10 +192,18 @@ HammingCode::HammingCode(QWidget* parent)
 	plotSignalSelector->addItem("Принимаемый");
 	plotSignalSelector->hide();
 
+	copyPlotToClipboard = new QPushButton(ui.centralWidget);
+	copyPlotToClipboard->setText("Копировать в буфер");
+	copyPlotToClipboard->hide();
+
+	showTableButton = new QPushButton(ui.centralWidget);
+	showTableButton->setText("Показать таблицу");
+	showTableButton->hide();
+
 	plotInfoWidget = new QWidget(ui.centralWidget);
 	setX(plotInfoWidget, ui.calculate->x() + ui.calculate->width() + 10);
 	setY(plotInfoWidget, ui.calculate->y());
-	setWidth(plotInfoWidget, 450);
+	setWidth(plotInfoWidget, 700);
 	setHeight(plotInfoWidget, plotErrorSelector->height());
 	//plotInfoWidget->setStyleSheet("background-color: lightblue;");
 
@@ -204,6 +215,8 @@ HammingCode::HammingCode(QWidget* parent)
 	plotInfoLayout->addWidget(plotErrorSelector);
 	plotInfoLayout->addWidget(plotSignalInfo);
 	plotInfoLayout->addWidget(plotSignalSelector);
+	plotInfoLayout->addWidget(copyPlotToClipboard);
+	plotInfoLayout->addWidget(showTableButton);
 
 
 	// Plot Layout
@@ -221,6 +234,8 @@ HammingCode::HammingCode(QWidget* parent)
 	connect(noiseTypeBox, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::noiseChanged);
 	connect(plotErrorSelector, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::plotChanged);
 	connect(plotSignalSelector, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::plotChanged);
+	connect(copyPlotToClipboard, SIGNAL(clicked()), this, SLOT(copyClicked()));
+	connect(showTableButton, SIGNAL(clicked()), this, SLOT(showTableClicked()));
 	for (int i = 0; i < tableN; ++i) {
 		connect(tableParams[i], &QTableWidget::clicked, tableParams[i],
 			QOverload<const QModelIndex&>::of(&QTableWidget::edit));
@@ -232,8 +247,8 @@ HammingCode::HammingCode(QWidget* parent)
 
 	// task viewer
 	taskWidget = new QWidget(ui.centralWidget);
-	setWidth(taskWidget, plotWidget->geometry().width() / 2);
-	setHeight(taskWidget, plotWidget->geometry().height() / 2);
+	setWidth(taskWidget, 500);
+	setHeight(taskWidget, 500);
 	setX(taskWidget, plotWidget->x() + (plotWidget->width() - taskWidget->width()) / 2);
 	setY(taskWidget, plotWidget->y() + (plotWidget->height() - taskWidget->height()) / 2);
 	//taskWidget->setStyleSheet("background-color: lightblue;");
@@ -250,11 +265,23 @@ HammingCode::HammingCode(QWidget* parent)
 	setDeafaultTableParams(tableParams[2], 1, 4);
 	setDeafaultTableParams(tableParams[3], 0, 4);
 	setDeafaultTableParams(tableParams[3], 6, tableParams[3]->rowCount());
+
+
 }
 
 
 HammingCode::~HammingCode()
 {
+}
+
+void HammingCode::showTableClicked()
+{
+	if (dataTable) dataTable->show();
+}
+
+void HammingCode::copyClicked()
+{
+	// !!!copy to clipboard here
 }
 
 void HammingCode::noiseChanged(int index)
@@ -401,9 +428,18 @@ void HammingCode::calculate_clicked()
 			}
 			return 0;
 			};
-		auto checkTableCorrectDouble = [&](int ti, int i, int j) -> bool {
+		auto checkTableNonNegativeDouble = [&](int ti, int i, int j) -> bool {
 			for (i; i < j; ++i) {
-				if (!correctDouble(tableParams[ti]->item(i, 1)->text())) {
+				if (!nonNegativeDouble(tableParams[ti]->item(i, 1)->text())) {
+					tableParams[ti]->item(i, 1)->setBackground(Qt::red);
+					return 1;
+				}
+			}
+			return 0;
+			};
+		auto checkTableNonNegativeInteger = [&](int ti, int i, int j) -> bool {
+			for (i; i < j; ++i) {
+				if (!nonNegativeInteger(tableParams[ti]->item(i, 1)->text())) {
 					tableParams[ti]->item(i, 1)->setBackground(Qt::red);
 					return 1;
 				}
@@ -419,7 +455,7 @@ void HammingCode::calculate_clicked()
 					}
 				}
 				else {
-					if (!positiveDouble(tableParams[3]->item(i, 1)->text())) {
+					if (!nonNegativeDouble(tableParams[3]->item(i, 1)->text())) {
 						tableParams[3]->item(i, 1)->setBackground(Qt::red);
 						return 1;
 					}
@@ -427,8 +463,10 @@ void HammingCode::calculate_clicked()
 			}
 			return 0;
 			};
+
 		if (checkTablePositiveDouble(2, 1, 4)) return 1;
-		if (checkTablePositiveDouble(3, 0, 4)) return 1;
+		if (checkTableNonNegativeDouble(3, 0, 2)) return 1;
+		if (checkTableNonNegativeInteger(3, 2, 4)) return 1;
 		if (checkNoiseParams()) return 1;
 		return 0;
 		};
@@ -459,7 +497,7 @@ void HammingCode::calculate_clicked()
 
 	if (result) return;
 
-	// !!! pop-up window with task should be here
+	// pop-up window with task
 	if (task->newTask()) {
 		plotErrorInfo->hide();
 		plotErrorSelector->hide();
@@ -467,10 +505,16 @@ void HammingCode::calculate_clicked()
 		plotSignalInfo->hide();
 		plotSignalSelector->hide();
 		plotSignalSelector->setCurrentIndex(0);
+		copyPlotToClipboard->hide();
+		showTableButton->hide();
 		if (pchartview) {
 			plotLayout->removeWidget(pchartview);
 			pchartview->setParent(0);
 			pchartview = 0;
+		}
+		if (dataTable) {
+			delete dataTable;
+			dataTable = 0;
 		}
 		task->show();
 		return;
@@ -482,6 +526,8 @@ void HammingCode::calculate_clicked()
 	plotSignalInfo->show();
 	plotSignalSelector->show();
 	plotSignalSelector->setCurrentIndex(0);
+	copyPlotToClipboard->show();
+	showTableButton->show();
 	if (pchartview) {
 		plotLayout->removeWidget(pchartview);
 		pchartview->setParent(0);
@@ -520,7 +566,6 @@ void HammingCode::calculate_clicked()
 	int iterations = tableParams[0]->item(0, 1)->text().toInt();
 
 	// start experiments
-
 	HammingCodeHandler handler(
 		bits, chunksize, modified,
 		signal_method, signal_dt, signal_A,
@@ -528,13 +573,21 @@ void HammingCode::calculate_clicked()
 		noise_t, noise_dt, noise_nu, noise_dnu,
 		noise_form, noise_polarity, noise_params,
 		iterations);
-	std::vector<std::string> tableData;
-	do {
-		tableData = handler.next();
-		// !!! add data to table
 
-	} while (tableData.size());
+	delete dataTable;
+	dataTable = new DataTable(iterations, modified);
+	//dataTable->show();
+
+	std::vector<std::string> rowData;
+	do {
+		rowData = handler.next();
+		// !!! add data to table
+		dataTable->addRow(rowData);
+
+	} while (rowData.size());
 	// !!! add handler.trustlevel to table or to another place
+	//dataTable->setTrustLevel();
+
 	// add plots to view
 	auto newPlot = [&](int i, int j, const std::vector<Dot>& data) {
 		series[i][j] = new QLineSeries;

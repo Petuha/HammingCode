@@ -67,6 +67,7 @@ TaskViewer::TaskViewer(QWidget* parent, HammingCode& mainClass) :
 	connect(answer, &QTableWidget::clicked, answer, QOverload<const QModelIndex&>::of(&QTableWidget::edit));
 	connect(checkButton, SIGNAL(clicked()), this, SLOT(check()));
 	connect(answer, &QTableWidget::itemChanged, this, &TaskViewer::answerChanged);
+	connect(verdictBox, &FocusWhellComboBox::currentIndexChanged, this, &TaskViewer::verdictChanged);
 	hide();
 }
 
@@ -143,7 +144,14 @@ bool TaskViewer::newTask()
 
 void TaskViewer::answerChanged(QTableWidgetItem* item)
 {
-	item->setBackground(Qt::white);
+	answerLabel->setStyleSheet("color: black;");
+	verdictLabel->setStyleSheet("color: black;");
+}
+
+void TaskViewer::verdictChanged(int index)
+{
+	answerLabel->setStyleSheet("color: black;");
+	verdictLabel->setStyleSheet("color: black;");
 }
 
 void TaskViewer::check() {
@@ -173,6 +181,9 @@ void TaskViewer::check() {
 	return;
 WA:
 	answer->blockSignals(1);
-	answer->item(0, 0)->setBackground(Qt::red);
+	verdictBox->blockSignals(1);
+	answerLabel->setStyleSheet("color: red;");
+	verdictLabel->setStyleSheet("color: red;");
 	answer->blockSignals(0);
+	verdictBox->blockSignals(0);
 }

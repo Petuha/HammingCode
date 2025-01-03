@@ -43,6 +43,7 @@ public:
 protected slots:
 	void check();
 	void answerChanged(QTableWidgetItem* item);
+	void verdictChanged(int index);
 private:
 	HammingCode& mainClass;
 	TaskManager manager;
@@ -57,6 +58,22 @@ private:
 	int task_num = 0;
 };
 
+class DataTable : public QWidget
+{
+	Q_OBJECT
+
+public:
+	DataTable(int iterations, bool modified);
+	void addRow(const std::vector<std::string>& data);
+	void setTrustLevel(double min, double max);
+	~DataTable();
+	void show();
+	void hide();
+private:
+	int i;
+	QTableWidget* table;
+};
+
 class HammingCode : public QMainWindow
 {
 	Q_OBJECT
@@ -66,6 +83,8 @@ public:
 	~HammingCode();
 protected slots:
 	void calculate_clicked();
+	void showTableClicked();
+	void copyClicked();
 	void noiseChanged(int index);
 	void plotChanged(int index);
 	void itemChanged(QTableWidgetItem* item);
@@ -87,6 +106,10 @@ private:
 	FocusWhellComboBox* plotErrorSelector;
 	QLabel* plotSignalInfo;
 	FocusWhellComboBox* plotSignalSelector;
+	QPushButton* copyPlotToClipboard;
+	QPushButton* showTableButton;
+
+	DataTable* dataTable = 0;
 
 	enum { tableN = 4 };
 	QTableWidget* tableParams[tableN];

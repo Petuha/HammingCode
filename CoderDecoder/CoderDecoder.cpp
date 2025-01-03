@@ -214,7 +214,7 @@ std::vector<std::string> HammingCodeHandler::next()
 
 	кол-во верных вердиктов добавочного бита
 	*/
-	std::vector<std::string> data(8 + modified);
+	std::vector<std::string> data(9 + modified);
 
 	std::vector<Dot> signal = generateSignalFromBits
 	(coded, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
