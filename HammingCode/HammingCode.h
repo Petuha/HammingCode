@@ -42,6 +42,7 @@ public:
 	bool newTask();
 protected slots:
 	void check();
+	void answerChanged(QTableWidgetItem* item);
 private:
 	HammingCode& mainClass;
 	TaskManager manager;
@@ -67,6 +68,7 @@ protected slots:
 	void calculate_clicked();
 	void noiseChanged(int index);
 	void plotChanged(int index);
+	void itemChanged(QTableWidgetItem* item);
 private:
 	Ui::HammingCodeClass ui;
 

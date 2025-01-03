@@ -1,11 +1,11 @@
-#include "SignalGenerator.h"
+п»ї#include "SignalGenerator.h"
 /*
-bits - входная последовательность из 0 и 1 в строковом виде
-method - метод преобразования
-dt - шаг дискретизации
-A - амплитуда
-bitDuration - длительность битового интервала
-polarity - полярность (0 - прямая, 1 - инвертированная)
+bits - РІС…РѕРґРЅР°СЏ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЊ РёР· 0 Рё 1 РІ СЃС‚СЂРѕРєРѕРІРѕРј РІРёРґРµ
+method - РјРµС‚РѕРґ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ
+dt - С€Р°Рі РґРёСЃРєСЂРµС‚РёР·Р°С†РёРё
+A - Р°РјРїР»РёС‚СѓРґР°
+bitDuration - РґР»РёС‚РµР»СЊРЅРѕСЃС‚СЊ Р±РёС‚РѕРІРѕРіРѕ РёРЅС‚РµСЂРІР°Р»Р°
+polarity - РїРѕР»СЏСЂРЅРѕСЃС‚СЊ (0 - РїСЂСЏРјР°СЏ, 1 - РёРЅРІРµСЂС‚РёСЂРѕРІР°РЅРЅР°СЏ)
 */
 std::vector<Dot> generateSignalFromBits(const std::string& bits,
     conversionMethod method, double dt, double A, double bitDuration, bool polarity)

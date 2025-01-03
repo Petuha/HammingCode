@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include <vector>
 #include <string>
 struct Dot {
@@ -7,7 +7,7 @@ struct Dot {
 };
 enum class conversionMethod {
 	NRZ, // Non-Return-to-Zero
-	MANCH, // Манчестерский
+	MANCH, // РњР°РЅС‡РµСЃС‚РµСЂСЃРєРёР№
 	RZ, // Return-to-Zero
 	AMI // Alternate Mark Inversion
 };

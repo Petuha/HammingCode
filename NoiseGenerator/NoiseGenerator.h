@@ -1,10 +1,10 @@
-#pragma once
+п»ї#pragma once
 #include "../SignalGenerator/SignalGenerator.h"
 #include <vector>
 enum class noiseForm {
-	a, // Прямоугольная
-	asinbx, // Синусоидальная
-	axx // Квадратичная
+	a, // РџСЂСЏРјРѕСѓРіРѕР»СЊРЅР°СЏ
+	asinbx, // РЎРёРЅСѓСЃРѕРёРґР°Р»СЊРЅР°СЏ
+	axx // РљРІР°РґСЂР°С‚РёС‡РЅР°СЏ
 };
 std::vector<Dot> generateNoise(int randSeed, const std::vector<Dot>& signal, double t, double dt, int nu, int dnu,
 	noiseForm form, bool polarity, std::vector<double> params);

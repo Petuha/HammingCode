@@ -224,6 +224,7 @@ HammingCode::HammingCode(QWidget* parent)
 	for (int i = 0; i < tableN; ++i) {
 		connect(tableParams[i], &QTableWidget::clicked, tableParams[i],
 			QOverload<const QModelIndex&>::of(&QTableWidget::edit));
+		connect(tableParams[i], &QTableWidget::itemChanged, this, &HammingCode::itemChanged);
 	}
 
 	// hide status bar
@@ -309,23 +310,15 @@ void HammingCode::plotChanged(int index)
 	pchartview = ptr;
 }
 
+void HammingCode::itemChanged(QTableWidgetItem* item)
+{
+	item->setBackground(Qt::white);
+}
+
 void HammingCode::calculate_clicked()
 {
 	// passed parameters check
-	{
-		// set backgrounds
-		auto setWhiteBg = [&](int ti, int i, int j) {
-			for (i; i < j; ++i) {
-				tableParams[ti]->item(i, 1)->setBackground(Qt::white);
-			}
-			};
-		setWhiteBg(0, 0, 1);
-		setWhiteBg(1, 0, 2);
-		setWhiteBg(2, 1, 4);
-		setWhiteBg(3, 0, 4);
-		setWhiteBg(3, 6, tableParams[3]->rowCount());
-
-		// now check
+	auto checkParams = [&]() -> bool {
 		auto correctInt = [](const QString& s) -> bool {
 			if (!s.size()) return 0; // empty string
 			bool start = 1;
@@ -386,17 +379,17 @@ void HammingCode::calculate_clicked()
 
 		if (!positiveInteger(tableParams[0]->item(0, 1)->text())) {
 			tableParams[0]->item(0, 1)->setBackground(Qt::red);
-			return;
+			return 1;
 		}
 
 		if (!correctBits(tableParams[1]->item(0, 1)->text())) {
 			tableParams[1]->item(0, 1)->setBackground(Qt::red);
-			return;
+			return 1;
 		}
 
 		if (!correctChunkSize(tableParams[1]->item(1, 1)->text(), tableParams[1]->item(0, 1)->text().size())) {
 			tableParams[1]->item(1, 1)->setBackground(Qt::red);
-			return;
+			return 1;
 		}
 
 		auto checkTablePositiveDouble = [&](int ti, int i, int j) -> bool {
@@ -434,10 +427,37 @@ void HammingCode::calculate_clicked()
 			}
 			return 0;
 			};
-		if (checkTablePositiveDouble(2, 1, 4)) return;
-		if (checkTablePositiveDouble(3, 0, 4)) return;
-		if (checkNoiseParams()) return;
+		if (checkTablePositiveDouble(2, 1, 4)) return 1;
+		if (checkTablePositiveDouble(3, 0, 4)) return 1;
+		if (checkNoiseParams()) return 1;
+		return 0;
+		};
+
+	// set backgrounds
+	auto setWhiteBg = [&](int ti, int i, int j) {
+		for (i; i < j; ++i) {
+			tableParams[ti]->item(i, 1)->setBackground(Qt::white);
+		}
+		};
+	setWhiteBg(0, 0, 1);
+	setWhiteBg(1, 0, 2);
+	setWhiteBg(2, 1, 4);
+	setWhiteBg(3, 0, 4);
+	setWhiteBg(3, 6, tableParams[3]->rowCount());
+
+	// block signals
+	for (int i = 0; i < tableN; ++i) {
+		tableParams[i]->blockSignals(1);
 	}
+
+	bool result = checkParams();
+
+	// unblock signals
+	for (int i = 0; i < tableN; ++i) {
+		tableParams[i]->blockSignals(0);
+	}
+
+	if (result) return;
 
 	// !!! pop-up window with task should be here
 	if (task->newTask()) {

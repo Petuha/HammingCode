@@ -66,6 +66,7 @@ TaskViewer::TaskViewer(QWidget* parent, HammingCode& mainClass) :
 	table->verticalHeader()->setDefaultSectionSize(tableHeight - 1);
 	connect(answer, &QTableWidget::clicked, answer, QOverload<const QModelIndex&>::of(&QTableWidget::edit));
 	connect(checkButton, SIGNAL(clicked()), this, SLOT(check()));
+	connect(answer, &QTableWidget::itemChanged, this, &TaskViewer::answerChanged);
 	hide();
 }
 
@@ -83,7 +84,9 @@ TaskViewer::~TaskViewer()
 		delete table;
 		};
 	delTable(table);
+	table = 0;
 	delTable(answer);
+	answer = 0;
 }
 
 void TaskViewer::show()
@@ -138,6 +141,11 @@ bool TaskViewer::newTask()
 	return 0;
 }
 
+void TaskViewer::answerChanged(QTableWidgetItem* item)
+{
+	item->setBackground(Qt::white);
+}
+
 void TaskViewer::check() {
 	if (manager.task[2] == "1") {
 		if (manager.checkAnswer(answer->item(0, 0)->text().toStdString(),
@@ -148,7 +156,7 @@ void TaskViewer::check() {
 			mainClass.calculate_clicked();
 		}
 		else {
-			// WA
+			goto WA;
 		}
 	}
 	else {
@@ -159,7 +167,12 @@ void TaskViewer::check() {
 			mainClass.calculate_clicked();
 		}
 		else {
-			// WA
+			goto WA;
 		}
 	}
+	return;
+WA:
+	answer->blockSignals(1);
+	answer->item(0, 0)->setBackground(Qt::red);
+	answer->blockSignals(0);
 }
