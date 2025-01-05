@@ -7,12 +7,11 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
 {
     std::vector<Dot> series; // Массив точек
     bool lastPolarity = false; // Для метода AMI (следить за последней полярностью)
-    int stepsPerBit = static_cast<int>(bitDuration / dt); // кол-во шагов
+    int stepsPerBit = static_cast<int>(bitDuration / dt); // кол-во шагов на один бит
     int globalStep = 0; // счётчик шагов
+    double t = 0.0; // тайм текущей точки на X
 
     for (char bit : bits) {
-        double t = 0.0;
-
         switch (method) {
             case conversionMethod::NRZ: {
                 // Non-Return-to-Zero: 0 -> -A, 1 -> +A
@@ -38,7 +37,7 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                     series.emplace_back(t, firstHalf);
                     ++globalStep;
                 }
-                for (int i = 0; i < halfSteps; ++i) {
+                for (int i = halfSteps; i < stepsPerBit; ++i) {
                     t = globalStep * dt;
                     series.emplace_back(t, secondHalf);
                     ++globalStep;
@@ -57,7 +56,7 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                     series.emplace_back(t, amplitude);
                     ++globalStep;
                 }
-                for (int i = 0; i < halfSteps; ++i) {
+                for (int i = halfSteps; i < stepsPerBit; ++i) {
                     t = globalStep * dt;
                     series.emplace_back(t, 0.0);
                     ++globalStep;
