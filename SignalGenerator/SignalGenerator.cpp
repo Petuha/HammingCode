@@ -3,16 +3,14 @@
 #include <cmath>     // Для математических операций
 
 std::vector<Dot> generateSignalFromBits(const std::string& bits,
-    conversionMethod method, double dt, double A, double bitDuration, bool polarity)
+    conversionMethod method, double dt, double A, double bitDuration, bool polarity) 
 {
     std::vector<Dot> series; // Массив точек
-    double time = 0.0;       // Текущее время
+    double time_start = 0.0; // Текущее время
     bool lastPolarity = false; // Для метода AMI (следить за последней полярностью)
 
     for (char bit : bits) {
-        if (bit != '0' && bit != '1') {
-            throw std::invalid_argument("Invalid bit sequence. Only '0' and '1' are allowed.");
-        }
+        int steps = static_cast<int>(bitDuration / dt); // кол-во шагов
 
         switch (method) {
             case conversionMethod::NRZ: {
@@ -20,8 +18,9 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                 double amplitude = (bit == '1') ? A : -A;
                 if (polarity) amplitude = -amplitude;
 
-                for (double t = 0; t < bitDuration; t += dt) {
-                    series.emplace_back(time + t, amplitude);
+                for (int i = 0; i < steps; ++i) {
+                    double t = time_start + i * dt;
+                    series.emplace_back(t, amplitude);
                 }
                 break;
             }
@@ -31,11 +30,14 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                 double firstHalf = (bit == '1') ? -A : A;
                 double secondHalf = -firstHalf;
 
-                for (double t = 0; t < bitDuration / 2; t += dt) {
-                    series.emplace_back(time + t, firstHalf);
+                int halfSteps = steps / 2;
+                for (int i = 0; i < halfSteps; ++i) {
+                    double t = time_start + i * dt;
+                    series.emplace_back(t, firstHalf);
                 }
-                for (double t = bitDuration / 2; t < bitDuration; t += dt) {
-                    series.emplace_back(time + t, secondHalf);
+                for (int i = halfSteps; i < steps; ++i) {
+                    double t = time_start + i * dt;
+                    series.emplace_back(t, secondHalf);
                 }
                 break;
             }
@@ -45,35 +47,34 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                 double amplitude = (bit == '1') ? A : 0;
                 if (polarity && bit == '1') amplitude = -amplitude;
 
-                for (double t = 0; t < bitDuration * 0.5; t += dt) {
-                    series.emplace_back(time + t, amplitude);
+                int halfSteps = steps / 2;
+                for (int i = 0; i < halfSteps; ++i) {
+                    double t = time_start + i * dt;
+                    series.emplace_back(t, amplitude);
                 }
-                for (double t = bitDuration * 0.5; t < bitDuration; t += dt) {
-                    series.emplace_back(time + t, 0);
+                for (int i = halfSteps; i < steps; ++i) {
+                    double t = time_start + i * dt;
+                    series.emplace_back(t, 0.0);
                 }
                 break;
             }
 
             case conversionMethod::AMI: {
                 // Alternate Mark Inversion: 0 -> 0, 1 -> alternating +A and -A
-                double amplitude = 0;
+                double amplitude = 0.0;
                 if (bit == '1') {
                     amplitude = lastPolarity ? -A : A;
                     lastPolarity = !lastPolarity;
                 }
 
-                for (double t = 0; t < bitDuration; t += dt) {
-                    series.emplace_back(time + t, amplitude);
+                for (int i = 0; i < steps; ++i) {
+                    double t = time_start + i * dt;
+                    series.emplace_back(t, amplitude);
                 }
                 break;
             }
-
-            default:
-                throw std::invalid_argument("Unsupported conversion method.");
         }
-
-        time += bitDuration; // Увеличиваем текущее время
+        time_start += bitDuration; // Увеличиваем текущее время
     }
-
     return series;
 }
