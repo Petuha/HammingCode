@@ -1,5 +1,4 @@
 ﻿#include "SignalGenerator.h"
-#include <stdexcept> // Для обработки исключений
 #include <cmath>     // Для математических операций
 
 std::vector<Dot> generateSignalFromBits(const std::string& bits,
@@ -7,7 +6,7 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
 {
     std::vector<Dot> series; // Массив точек
     bool lastPolarity = false; // Для метода AMI (следить за последней полярностью)
-    int stepsPerBit = static_cast<int>(bitDuration / dt); // кол-во шагов на один бит
+    int stepsPerBit = static_cast<int>(ceil(bitDuration / dt)); // кол-во шагов на один бит
     int globalStep = 0; // счётчик шагов
     double t = 0.0; // тайм текущей точки на X
 
