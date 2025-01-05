@@ -8,9 +8,10 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
     std::vector<Dot> series; // Массив точек
     double time_start = 0.0; // Текущее время
     bool lastPolarity = false; // Для метода AMI (следить за последней полярностью)
+    int steps = static_cast<int>(bitDuration / dt); // кол-во шагов
 
     for (char bit : bits) {
-        int steps = static_cast<int>(bitDuration / dt); // кол-во шагов
+        double t = 0.0;
 
         switch (method) {
             case conversionMethod::NRZ: {
@@ -19,7 +20,7 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                 if (polarity) amplitude = -amplitude;
 
                 for (int i = 0; i < steps; ++i) {
-                    double t = time_start + i * dt;
+                    t = time_start + i * dt;
                     series.emplace_back(t, amplitude);
                 }
                 break;
@@ -32,11 +33,11 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
 
                 int halfSteps = steps / 2;
                 for (int i = 0; i < halfSteps; ++i) {
-                    double t = time_start + i * dt;
+                    t = time_start + i * dt;
                     series.emplace_back(t, firstHalf);
                 }
                 for (int i = halfSteps; i < steps; ++i) {
-                    double t = time_start + i * dt;
+                    t = time_start + i * dt;
                     series.emplace_back(t, secondHalf);
                 }
                 break;
@@ -49,11 +50,11 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
 
                 int halfSteps = steps / 2;
                 for (int i = 0; i < halfSteps; ++i) {
-                    double t = time_start + i * dt;
+                    t = time_start + i * dt;
                     series.emplace_back(t, amplitude);
                 }
                 for (int i = halfSteps; i < steps; ++i) {
-                    double t = time_start + i * dt;
+                    t = time_start + i * dt;
                     series.emplace_back(t, 0.0);
                 }
                 break;
@@ -68,7 +69,7 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                 }
 
                 for (int i = 0; i < steps; ++i) {
-                    double t = time_start + i * dt;
+                    t = time_start + i * dt;
                     series.emplace_back(t, amplitude);
                 }
                 break;
