@@ -1,5 +1,4 @@
 ﻿#include "SignalGenerator.h"
-#include <stdexcept>
 #include <cmath>
 
 std::vector<Dot> generateSignalFromBits(const std::string& bits,
@@ -43,6 +42,9 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                     t += dt;
                 }
 
+                // Добавляем последнюю точку 
+                series.emplace_back(t, lastAmplitude);
+
                 // Вторая половина битов
                 for (int i = halfSteps; i < stepsPerBit; ++i) {
                     series.emplace_back(t, secondHalf);
@@ -50,6 +52,7 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                     t += dt;
                 }
 
+                // Добавляем последнюю точку 
                 series.emplace_back(t, lastAmplitude); 
                 break;
             }
@@ -67,6 +70,9 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                     t += dt; // Увеличиваем время
                 }
 
+                // Добавляем последнюю точку 
+                series.emplace_back(t, lastAmplitude); 
+
                 // Вторая половина битов (амплитуда 0)
                 for (int i = halfSteps; i < stepsPerBit; ++i) {
                     series.emplace_back(t, 0.0);
@@ -74,6 +80,7 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                     t += dt; // Увеличиваем время
                 }
 
+                // Добавляем последнюю точку 
                 series.emplace_back(t, lastAmplitude); 
                 break;
             }
@@ -92,6 +99,7 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                     t += dt; // Увеличиваем время
                 }
 
+                // Добавляем последнюю точку 
                 series.emplace_back(t, lastAmplitude); 
                 break;
             }
