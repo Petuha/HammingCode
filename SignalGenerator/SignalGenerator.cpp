@@ -1,95 +1,98 @@
 ﻿#include "SignalGenerator.h"
+#include <stdexcept>
 #include <cmath>
 
 std::vector<Dot> generateSignalFromBits(const std::string& bits,
     conversionMethod method, double dt, double A, double bitDuration, bool polarity) 
 {
     std::vector<Dot> series; // Массив точек
-    bool lastPolarity = false; // Для метода AMI (следить за последней полярностью)
-    int stepsPerBit = static_cast<int>(ceil(bitDuration / dt)); // кол-во шагов на один бит
-    int globalStep = 0; // счётчик шагов
-    double t = 0.0; // тайм текущей точки на X
-    double prevDot = -1.0; // предыдущая точка
+    bool lastPolarity = false; // Для метода AMI
+    int stepsPerBit = static_cast<int>(bitDuration / dt); // Количество шагов на 1 бит без округления
+    double t = 0.0; // Время текущей точки
 
     for (char bit : bits) {
+        double amplitude = 0.0;
+        double lastAmplitude = 0.0; // Для запоминания амплитуды предыдущей точки
         switch (method) {
             case conversionMethod::NRZ: {
-                double amplitude = (bit == '1') ? A : -A;
+                // Для NRZ: 0 -> -A, 1 -> +A
+                amplitude = (bit == '1') ? A : -A;
                 if (polarity) amplitude = -amplitude;
 
-                for (int i = 0; i <= stepsPerBit; ++i, ++globalStep) { // <= stepsPerBit для добавления последней точки
-                    t = globalStep * dt;
-                    // Проверка на уникальность точки
-                    if (t != prevDot) {
-                        series.emplace_back(t, amplitude);
-                        prevDot = t;
-                    }
+                // Для каждого шага битов амплитуда постоянна
+                for (int i = 0; i < stepsPerBit; ++i) {
+                    series.emplace_back(t, amplitude);
+                    lastAmplitude = amplitude; // Запоминаем амплитуду
+                    t += dt; // Увеличиваем время
                 }
-                --globalStep; // Возвращаемся на 1 шаг назад
+
+                // Добавляем последнюю точку с текущей амплитудой
+                series.emplace_back(t, lastAmplitude); 
                 break;
             }
 
             case conversionMethod::MANCH: {
                 double firstHalf = (bit == '1') ? -A : A;
                 double secondHalf = -firstHalf;
-
                 int halfSteps = stepsPerBit / 2;
-                for (int i = 0; i < halfSteps; ++i, ++globalStep) {
-                    t = globalStep * dt;
-                    if (t != prevDot) {
-                        series.emplace_back(t, firstHalf);
-                        prevDot = t;
-                    }
+
+                // Первая половина битов
+                for (int i = 0; i < halfSteps; ++i) {
+                    series.emplace_back(t, firstHalf);
+                    lastAmplitude = firstHalf; // Запоминаем амплитуду
+                    t += dt;
                 }
-                for (int i = halfSteps; i <= stepsPerBit; ++i, ++globalStep) {
-                    t = globalStep * dt;
-                    if (t != prevDot) {
-                        series.emplace_back(t, secondHalf);
-                        prevDot = t;
-                    }
+
+                // Вторая половина битов
+                for (int i = halfSteps; i < stepsPerBit; ++i) {
+                    series.emplace_back(t, secondHalf);
+                    lastAmplitude = secondHalf; // Запоминаем амплитуду
+                    t += dt;
                 }
-                --globalStep;
+
+                series.emplace_back(t, lastAmplitude); 
                 break;
             }
 
             case conversionMethod::RZ: {
-                double amplitude = (bit == '1') ? A : 0;
-                if (bit == '1' && polarity) amplitude = -amplitude;
+                amplitude = (bit == '1') ? A : 0;
+                if (polarity && bit == '1') amplitude = -amplitude;
 
                 int halfSteps = stepsPerBit / 2;
-                for (int i = 0; i < halfSteps; ++i, ++globalStep) {
-                    t = globalStep * dt;
-                    if (t != prevDot) {
-                        series.emplace_back(t, amplitude);
-                        prevDot = t;
-                    }
+
+                // Первая половина битов (амплитуда A или 0)
+                for (int i = 0; i < halfSteps; ++i) {
+                    series.emplace_back(t, amplitude);
+                    lastAmplitude = amplitude; // Запоминаем амплитуду
+                    t += dt; // Увеличиваем время
                 }
-                for (int i = halfSteps; i <= stepsPerBit; ++i, ++globalStep) {
-                    t = globalStep * dt;
-                    if (t != prevDot) {
-                        series.emplace_back(t, 0.0);
-                        prevDot = t;
-                    }
+
+                // Вторая половина битов (амплитуда 0)
+                for (int i = halfSteps; i < stepsPerBit; ++i) {
+                    series.emplace_back(t, 0.0);
+                    lastAmplitude = 0.0; // Запоминаем амплитуду
+                    t += dt; // Увеличиваем время
                 }
-                --globalStep;
+
+                series.emplace_back(t, lastAmplitude); 
                 break;
             }
 
             case conversionMethod::AMI: {
-                double amplitude = 0.0;
+                amplitude = 0.0;
                 if (bit == '1') {
                     amplitude = lastPolarity ? -A : A;
                     lastPolarity = !lastPolarity;
                 }
 
-                for (int i = 0; i <= stepsPerBit; ++i, ++globalStep) {
-                    t = globalStep * dt;
-                    if (t != prevDot) {
-                        series.emplace_back(t, amplitude);
-                        prevDot = t;
-                    }
+                // Для каждого шага добавляем точки с чередующейся амплитудой
+                for (int i = 0; i < stepsPerBit; ++i) {
+                    series.emplace_back(t, amplitude);
+                    lastAmplitude = amplitude; // Запоминаем амплитуду
+                    t += dt; // Увеличиваем время
                 }
-                --globalStep;
+
+                series.emplace_back(t, lastAmplitude); 
                 break;
             }
         }
