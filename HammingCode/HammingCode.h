@@ -65,7 +65,7 @@ class DataTable : public QWidget
 public:
 	DataTable(int iterations, bool modified);
 	void addRow(const std::vector<std::string>& data);
-	void setTrustLevel(double min, double max);
+	void setTrustLevel(double min, double max, double lvl);
 	~DataTable();
 	void show();
 	void hide();

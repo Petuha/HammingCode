@@ -42,8 +42,12 @@ public:
 	*/
 	std::vector<std::string> next();
 	std::vector<Dot> plots[(int)Plot::plotN][(int)Plot::plotM]; // all necessary plots
-	double trustlevel;
+	double trustlevel = -1;
+	double min = -1;
+	double max = -1;
 private:
+	void setTrustLevel();
+	
 	// base parameters
 
 	std::string bits;

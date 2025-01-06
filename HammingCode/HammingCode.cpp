@@ -276,12 +276,35 @@ HammingCode::~HammingCode()
 
 void HammingCode::showTableClicked()
 {
-	if (dataTable) dataTable->show();
+	if (dataTable) {
+		dataTable->hide();
+		dataTable->show();
+	}
 }
 
 void HammingCode::copyClicked()
 {
-	// !!!copy to clipboard here
+	int maxWidth = 1920, maxHeight = 1080;
+	QChartView* chartView = chartview[plotErrorSelector->currentIndex()][plotSignalSelector->currentIndex()];
+	if (!chartView) return;
+	int width = chartView->width();
+	int height = chartView->height();
+	if (1.0 * height * maxWidth / width <= maxHeight) {
+		height = static_cast<int>(1.0 * height * maxWidth / width);
+		width = maxWidth;
+	}
+	else {
+		width = static_cast<int>(1.0 * width * maxHeight / height);
+		height = maxHeight;
+	}
+	QImage image(width, height, QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
+	QPainter painter(&image);
+	chartView->render(&painter);
+	painter.end();
+	QClipboard* clipboard = QGuiApplication::clipboard();
+	if (!clipboard) return;
+	clipboard->setImage(image);
 }
 
 void HammingCode::noiseChanged(int index)
@@ -586,7 +609,7 @@ void HammingCode::calculate_clicked()
 
 	} while (rowData.size());
 	// !!! add handler.trustlevel to table or to another place
-	//dataTable->setTrustLevel();
+	dataTable->setTrustLevel(handler.min, handler.max, handler.trustlevel);
 
 	// add plots to view
 	auto newPlot = [&](int i, int j, const std::vector<Dot>& data) {

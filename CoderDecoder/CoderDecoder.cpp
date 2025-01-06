@@ -1,11 +1,5 @@
 ﻿#include "CoderDecoder.h"
 
-// !!! must be done
-double getTrustLevel(int iterations) {
-
-	return 0;
-}
-
 int getcodedChunkSize(int chunksize, bool modified) {
 	auto additionalBits = [&]() -> int {
 		int n = 0, x = 1;
@@ -182,7 +176,6 @@ HammingCodeHandler::HammingCodeHandler(std::string bits, int chunksize, bool mod
 {
 	experiments.reserve(iterations);
 	coded = hammingCoder(this->bits, chunksize, modified);
-	trustlevel = getTrustLevel(iterations);
 }
 
 std::vector<std::string> HammingCodeHandler::next()
@@ -296,9 +289,29 @@ std::vector<std::string> HammingCodeHandler::next()
 		addPlot(1, experiments.begin()->second);
 		addPlot(2, experiments[experiments.size() / 2].second);
 		addPlot(3, greatestCorrectRestored.second);
+		setTrustLevel();
 	}
 
 	return data;
+}
+
+void HammingCodeHandler::setTrustLevel()
+{
+	if (!experiments.size()) return;
+	trustlevel = 0.9545;
+	double s = 0, sigma = 0;
+	for (auto& exp : experiments) {
+		s += exp.first;
+	}
+	s /= experiments.size();
+	for (auto& exp : experiments) {
+		sigma += (s - exp.first) * (s - exp.first);
+	}
+	if (experiments.size() < 30) sigma /= experiments.size();
+	else sigma /= (experiments.size() - 1);
+	sigma = sqrt(sigma);
+	min = s - 2 * sigma;
+	max = s + 2 * sigma;
 }
 
 TaskManager::TaskManager() :

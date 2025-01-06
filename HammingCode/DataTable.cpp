@@ -17,10 +17,11 @@ DataTable::DataTable(int iterations, bool modified)
 		//table->item(i, j)->setFlags(Qt::ItemIsEnabled);
 		table->item(i, j)->setText(s);
 		};
-	setItem(0, 0, "Доверительный интервал:");
-	setItem(0, 1, "Минимум");
-	setItem(0, 2, "Максимум");
-	setItem(2, 0, "Эксперименты:");
+	setItem(0, 0, "Доверительный интервал");
+	setItem(1, 0, "Минимум:");
+	setItem(1, 2, "Максимум:");
+	setItem(1, 4, "Уровень доверия:");
+	setItem(2, 0, "Эксперименты");
 	setItem(3, 0, "Номер итерации");
 	setItem(3, 1, "Принятая последовательность");
 	setItem(3, 2, "Восстановленная последовательность");
@@ -53,10 +54,11 @@ void DataTable::addRow(const std::vector<std::string>& data)
 	++i;
 }
 
-void DataTable::setTrustLevel(double min, double max)
+void DataTable::setTrustLevel(double min, double max, double lvl)
 {
 	table->item(1, 1)->setText(QString::number(min, 103, 2));
-	table->item(1, 2)->setText(QString::number(max, 103, 2));
+	table->item(1, 3)->setText(QString::number(max, 103, 2));
+	table->item(1, 5)->setText(QString::number(lvl, 103, 2));
 }
 
 DataTable::~DataTable()
