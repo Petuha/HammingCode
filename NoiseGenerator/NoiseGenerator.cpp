@@ -17,9 +17,7 @@ private:
 
 public:
     RandomDouble(unsigned int seed, double minVal, double maxVal)
-        : gen(seed) {
-        dist = std::uniform_real_distribution<double>(minVal, maxVal);
-    }
+       : gen(seed), dist(minVal, maxVal) {}
 
     double get() {
         return dist(gen);
@@ -33,9 +31,7 @@ private:
 
 public:
     RandomInt(unsigned int seed, int minVal, int maxVal)
-        : gen(seed) {
-        dist = std::uniform_int_distribution<int>(minVal, maxVal);
-    }
+        : gen(seed), dist(minVal, maxVal) {}
 
     int get() {
         return dist(gen);
@@ -108,10 +104,13 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
     // Целое кол-во секунд – пробежимся от floor(xMin) до floor(xMax).
     int startSecond = static_cast<int>(std::floor(xMin));
     int endSecond = static_cast<int>(std::floor(xMax));
+
+    // Метод 2-х указателей: итератор начала
+    auto currentIt = signal.begin();
     
     for (int sec = startSecond; sec <= endSecond; ++sec) {
         // Количество импульсов в текущей секунде
-        int numImpulses = static_cast<int>(nuRand.get());
+        int numImpulses = nuRand.get();
 
         for (int i = 0; i < numImpulses; ++i) {
             double startTime = sec + timeInSecRand.get();
@@ -156,17 +155,22 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
 
             double endTime = startTime + impulseLength;
 
-            // Находим диапазон индексов точек, попадающих в [startTime, endTime)
-            auto lower = std::lower_bound(result.begin(), result.end(), startTime,
-                [](const Dot& dot, double value) { return dot.x < value; });
-            auto upper = std::lower_bound(result.begin(), result.end(), endTime,
-                [](const Dot& dot, double value) { return dot.x < value; });
+            // Продвигаем currentIt до первого элемента с x >= startTime
+            while (currentIt != signal.end() && currentIt->x < startTime) {
+                ++currentIt;
+            }
+            // Устанавливаем lowerBound на текущую позицию
+            auto lower = currentIt;
 
-            // Применяем импульс к точкам в диапазоне
-            for (auto it = lower; it != upper; ++it) {
+            // Теперь используем отдельный итератор для продвижения до конца импульса
+            auto it = lower;
+            while (it != signal.end() && it->x < endTime) {
                 double localX = it->x - startTime;
                 it->y += sign * getImpulseValue(form, localX, impulseLength, aVal, bVal);
+                ++it;
             }
+            // Обновляем currentIt для следующего импульса
+            currentIt = it;
         }
     }
 }
