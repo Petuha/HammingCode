@@ -10,12 +10,6 @@ polarity - полярность (0 - однополярная, 1 - биполя�
 params - дополнительные параметры для формы импульса
 */
 // Генерация случайного числа типа double в интервале (minVal, maxVal).
-double randomDouble(std::mt19937& gen, double minVal, double maxVal)
-{
-    // Используем равномерное распределение
-    std::uniform_real_distribution<double> dist(minVal, maxVal);
-    return dist(gen);
-}
 
 double getImpulseValue(
     ImpulseForm form,
@@ -54,7 +48,7 @@ double getImpulseValue(
     return 0.0;
 }
 
-std::vector<Dot> generateNoise(int randSeed, const std::vector<Dot>& signal, double t, double dt, int nu, int dnu,
+void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, int nu, int dnu,
     noiseForm form, bool polarity, std::vector<double> params)
 {
     if (signal.size() <= 1)
@@ -66,15 +60,23 @@ std::vector<Dot> generateNoise(int randSeed, const std::vector<Dot>& signal, dou
     // Инициализируем псевдо рандомные числа, используя заданный randSeed
     std::mt19937 gen(randSeed);
 
-    // Шаг по оси X (предполагаем равномерный сигнал)
-    double z = signal[1].x - signal[0].x;
-    if (z <= 0.0)
-    {
-        // Если точки имеют совпадающие X или убывают, 
-        // тоже ничего не делаем
-        return;
-    }
+    RandomParameter tRand(seed++, t - dt, t + dt);  // Для длительности
+    RandomParameter timeInSecRand(seed++, 0.0, 1.0);  // Для начала импульса в секунде
+    RandomParameter nuRand(seed++, std::max(0, nu - dnu), std::max(0, nu + dnu));  // Для количества импульсов
 
+    // Параметры a
+    double aMean = params[0];
+    double aDelta = params[1];
+
+    // Параметры b (если есть)
+    double bMean = params.size() == 4 ? params[2] : 0.0;
+    double bDelta = params.size() == 4 ? params[3] : 0.0;
+
+    std::vector<double> xCoords;
+    for (const auto& dot : signal) {
+        xCoords.push_back(dot.x);
+    }
+    
     // Определяем временной диапазон сигнала: от xMin до xMax
     double xMin = signal.front().x;
     double xMax = signal.back().x;
@@ -94,61 +96,65 @@ std::vector<Dot> generateNoise(int randSeed, const std::vector<Dot>& signal, dou
             continue;
     
         // Выбираем, сколько началов импульса будет в этой секунде
-        double impulsesInThisSecond = randomDouble(gen, nu - dnu, nu + dnu);
-        // Округляем до ближайшего целого, чтобы получить "x начал помех"
-        int numImpulses = static_cast<int>(std::round(impulsesInThisSecond));
+        int numImpulses = static_cast<int>(nuRand.get());
         if (numImpulses < 0) numImpulses = 0; // На всякий случай
     
         // Для каждого из этих началов накладываем импульс
-        for (int i = 0; i < numImpulses; ++i)
-        {
-            // Выбираем случайный момент начала импульса внутри [sec, sec+1)
-            double startTime = sec + randomDouble(gen, 0.0, 1.0);
-    
-            // Случайная длительность из (t-dt, t+dt)
-            double impulseLength = randomDouble(gen, t - dt, t + dt);
-            if (impulseLength <= 0.0)
-                continue; // если вдруг получилось <= 0, пропускаем
-    
-            // Случайные параметры a и b, если нужно
-            double aVal = randomDouble(gen, params.a_mean - params.a_delta,
-                params.a_mean + params.a_delta);
-            double bVal = randomDouble(gen, params.b_mean - params.b_delta,
-                params.b_mean + params.b_delta);
-    
+        for (int i = 0; i < numImpulses; ++i) {
+            double startTime = sec + timeInSecRand.get();
+            double impulseLength = tRand.get();
+        
+            if (impulseLength <= 0.0) continue;
+        
+            // Определяем диапазон для параметра a
+            double aMin, aMax;
+            if (polarity == 0) {
+                if (aMean > 0) {
+                    aMin = std::max(aMean - aDelta, 0.0);
+                    aMax = aMean + aDelta;
+                }
+                else {
+                    aMin = aMean - aDelta;
+                    aMax = std::min(aMean + aDelta, 0.0);
+                }
+            }
+            else {
+                aMin = aMean - aDelta;
+                aMax = aMean + aDelta;
+            }
+
+            // Генератор для a
+            RandomParameter aRand(seed++, aMin, aMax);
+            double aVal = aRand.get();
+
+            // Генератор для b (если используется)
+            double bVal = 0.0;
+            if (params.size() == 4) {
+                RandomParameter bRand(seed++, bMean - bDelta, bMean + bDelta);
+                bVal = bRand.get();
+            }
+            
             // Выбираем знак, если Polarity::ALTERNATE_SIGN
+    
             double sign = 1.0;
-            if (polarity == 1)
-            {
-                sign = usePlusSign ? 1.0 : -1.0;
-                usePlusSign = !usePlusSign;
+            if (polarity) {
+                RandomParameter signRand(seed++, 0.0, 1.0);
+                sign = (signRand.get() >= 0.5) ? 1.0 : -1.0;
             }
-            else if (polarity == 0)
-            {
-                sign = 1.0;
-            }
-    
-            // Теперь идём по всем точкам сигнала, которые попадают
-            // во временной промежуток [startTime, startTime + impulseLength]
-            // и прибавляем соответствующие значения импульса.
+
             double endTime = startTime + impulseLength;
-    
-            // Чтобы не проходить по всему сигналу (особенно если он большой),
-            // можно найти индексы вектора, которые попадают в нужный диапазон времени.
-            // Но для простоты пройдёмся по всем.
-            for (size_t j = 0; j < signal.size(); ++j)
-            {
-                double xCoord = signal[j].x;
-                if (xCoord < startTime || xCoord > endTime)
-                    continue; // вне диапазона импульса
-    
-                // localX = сколько прошло времени от начала импульса
-                double localX = xCoord - startTime;
-                // Считаем значение формы импульса в localX и добавляем к signal[j].y
-                double val = getImpulseValue(form, localX, impulseLength, aVal, bVal);
-                signal[j].y += sign * val;
+
+            // Находим диапазон индексов точек, попадающих в [startTime, endTime)
+            auto lower = std::lower_bound(result.begin(), result.end(), startTime,
+                [](const Dot& dot, double value) { return dot.x < value; });
+            auto upper = std::lower_bound(result.begin(), result.end(), endTime,
+                [](const Dot& dot, double value) { return dot.x < value; });
+
+            // Применяем импульс к точкам в диапазоне
+            for (auto it = lower; it != upper; ++it) {
+                double localX = it->x - startTime;
+                    it->y += sign * getImpulseValue(form, localX, impulseLength, aVal, bVal);
             }
         }
     }
-    return std::vector<Dot>();
 }
