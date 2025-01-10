@@ -91,13 +91,21 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
     RandomDouble timeInSecRand(seed++, 0.0, 1.0);        // Для начала импульса в секунде
     RandomInt nuRand(seed++, std::max(0, nu - dnu), nu + dnu);  // Для количества импульсов
 
+    int sign = 1;
     // Параметры a
     double aMean = params[0];
     double aDelta = params[1];
-
+    RandomDouble aRand(seed++, 0, 0);
+    
     // Параметры b (если есть)
     double bMean = params.size() == 4 ? params[2] : 0.0;
     double bDelta = params.size() == 4 ? params[3] : 0.0;
+    RandomDouble bRand(0, 0.0, 1.0);  // Временная инициализация
+    double bVal = 0.0;
+    if (params.size() == 4) {
+        bRand = RandomDouble(seed++, bMean - bDelta, bMean + bDelta);
+        bVal = bRand.get();
+    }
     // Определяем временной диапазон сигнала: от xMin до xMax
     double xMin = signal.front().x;
     double xMax = signal.back().x;
@@ -135,22 +143,14 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
                 aMax = aMean + aDelta;
             }
 
-            // Генератор для a
-            RandomDouble aRand(seed++, aMin, aMax);
+            aRand.minVal = aMin;
+            aRand.maxVal = aMax;
             double aVal = aRand.get();
 
-            // Генератор для b (если используется)
-            double bVal = 0.0;
-            if (params.size() == 4) {
-                RandomDouble bRand(seed++, bMean - bDelta, bMean + bDelta);
-                bVal = bRand.get();
-            }
-
             // Определение знака при polarity == 1 псевдослучайным образом
-            double sign = 1.0;
             if (polarity) {
-                RandomDouble signRand(seed++, 0.0, 1.0);
-                sign = (signRand.get() >= 0.5) ? 1.0 : -1.0;
+                RandomInt signRand(seed++, 0, 1);
+                sign = signRand.get() ? 1.0 : -1.0;
             }
 
             double endTime = startTime + impulseLength;
