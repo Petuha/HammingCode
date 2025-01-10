@@ -113,8 +113,7 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
     int startSecond = static_cast<int>(std::floor(xMin));
     int endSecond = static_cast<int>(std::floor(xMax));
 
-    // Метод 2-х указателей: итератор начала
-    auto currentIt = signal.begin();
+    size_t left = 0, right = 0;
     
     for (int sec = startSecond; sec <= endSecond; ++sec) {
         // Количество импульсов в текущей секунде
@@ -155,22 +154,23 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
 
             double endTime = startTime + impulseLength;
 
-            // Продвигаем currentIt до первого элемента с x >= startTime
-            while (currentIt != signal.end() && currentIt->x < startTime) {
-                ++currentIt;
+            // Сдвигаем left к первому индексу, где signal[left].x >= startTime
+            while (left < signal.size() && signal[left].x < startTime) {
+                ++left;
             }
-            // Устанавливаем lowerBound на текущую позицию
-            auto lower = currentIt;
-
-            // Теперь используем отдельный итератор для продвижения до конца импульса
-            auto it = lower;
-            while (it != signal.end() && it->x < endTime) {
-                double localX = it->x - startTime;
-                it->y += sign * getImpulseValue(form, localX, impulseLength, aVal, bVal);
-                ++it;
+            // Устанавливаем right равным left, так как диапазон начинается с left
+            right = left;
+            
+            // Продвигаем right, пока условие (x < endTime) выполняется
+            while (right < signal.size() && signal[right].x < endTime) {
+                ++right;
             }
-            // Обновляем currentIt для следующего импульса
-            currentIt = it;
+            
+            for (size_t i = left; i < right; ++i) {
+                double localX = signal[i].x - startTime;
+                // Применяем значение импульса к точке signal[i]
+                signal[i].y += sign * getImpulseValue(form, localX, impulseLength, aVal, bVal);
+            }
         }
     }
 }
