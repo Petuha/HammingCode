@@ -6,17 +6,16 @@
 class RandomParameter {
 private:
     std::mt19937 gen;
-    std::uniform_int_distribution<double> dist;
-public:
-    RandomGenerator(unsigned int seed, double minVal, double maxVal)
-        : gen(seed), dist(minVal, maxVal) {}
+    std::uniform_real_distribution<double> dist;
 
-    double generate() {
-        return dist(gen);
+public:
+    RandomParameter(unsigned int seed, double minVal, double maxVal)
+        : gen(seed) {
+        dist = std::uniform_real_distribution<double>(minVal, maxVal);
     }
 
-    void setRange(double minVal, double maxVal) {
-        dist = std::uniform_int_distribution<double>(minVal, maxVal);
+    double get() {
+        return dist(gen);
     }
 };
 
