@@ -3,7 +3,7 @@
 #include <vector>
 
 
-class RandomGenerator {
+class RandomParameter {
 private:
     std::mt19937 gen;
     std::uniform_int_distribution<double> dist;
