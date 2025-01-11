@@ -84,8 +84,6 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
         return;
     }
 
-    // Инициализируем псевдо рандомные числа, используя заданный randSeed
-    std::mt19937 gen(randSeed);
 
     RandomDouble tRand(seed++, std::max(0.0, t - dt), t + dt);   // Для длительности
     RandomDouble timeInSecRand(seed++, 0.0, 1.0);        // Для начала импульса в секунде
@@ -113,6 +111,33 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
     int startSecond = static_cast<int>(std::floor(xMin));
     int endSecond = static_cast<int>(std::floor(xMax));
 
+    // Определяем диапазон для параметра a
+    double aMin, aMax;
+    if (!polarity) {
+        if (aMean > 0) {
+            aMin = std::max(aMean - aDelta, 0.0);
+            aMax = aMean + aDelta;
+        }
+        else {
+            aMin = aMean - aDelta;
+            aMax = std::min(aMean + aDelta, 0.0);
+        }
+    }
+    else {
+        aMin = aMean - aDelta;
+        aMax = aMean + aDelta;
+    }
+
+    aRand.minVal = aMin;
+    aRand.maxVal = aMax;
+    double aVal = aRand.get();
+
+    // Определение знака при polarity == 1 псевдослучайным образом
+    if (polarity) {
+        RandomInt signRand(seed++, 0, 1);
+        sign = signRand.get() ? 1.0 : -1.0;
+    }
+    
     size_t left = 0, right = 0;
     
     for (int sec = startSecond; sec <= endSecond; ++sec) {
@@ -124,33 +149,6 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
             double impulseLength = tRand.get();
 
             if (impulseLength <= 0.0) continue;
-
-            // Определяем диапазон для параметра a
-            double aMin, aMax;
-            if (!polarity) {
-                if (aMean > 0) {
-                    aMin = std::max(aMean - aDelta, 0.0);
-                    aMax = aMean + aDelta;
-                }
-                else {
-                    aMin = aMean - aDelta;
-                    aMax = std::min(aMean + aDelta, 0.0);
-                }
-            }
-            else {
-                aMin = aMean - aDelta;
-                aMax = aMean + aDelta;
-            }
-
-            aRand.minVal = aMin;
-            aRand.maxVal = aMax;
-            double aVal = aRand.get();
-
-            // Определение знака при polarity == 1 псевдослучайным образом
-            if (polarity) {
-                RandomInt signRand(seed++, 0, 1);
-                sign = signRand.get() ? 1.0 : -1.0;
-            }
 
             double endTime = startTime + impulseLength;
 
