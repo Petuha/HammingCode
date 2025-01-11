@@ -93,7 +93,6 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
     // Параметры a
     double aMean = params[0];
     double aDelta = params[1];
-    RandomDouble aRand(seed++, 0, 0);
     
     // Параметры b (если есть)
     double bMean = params.size() == 4 ? params[2] : 0.0;
@@ -127,9 +126,8 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
         aMin = aMean - aDelta;
         aMax = aMean + aDelta;
     }
-
-    aRand.minVal = aMin;
-    aRand.maxVal = aMax;
+    
+    RandomDouble aRand(seed, aMin, aMax);
     double aVal = aRand.get();
 
     // Определение знака при polarity == 1 псевдослучайным образом
