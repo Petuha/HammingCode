@@ -106,6 +106,9 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
     // Определяем временной диапазон сигнала: от xMin до xMax
     double xMin = signal.front().x;
     double xMax = signal.back().x;
+
+    double deltaT = signal[1].x - signal[0].x;
+    
     // Целое кол-во секунд – пробежимся от floor(xMin) до floor(xMax).
     int startSecond = static_cast<int>(std::floor(xMin));
     int endSecond = static_cast<int>(std::floor(xMax));
@@ -129,12 +132,10 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
     
     RandomDouble aRand(seed++, aMin, aMax);
     double aVal = aRand.get();
-
+    
+    RandomInt signRand(seed++, polarity ? 0 : 1, 1);
     // Определение знака при polarity == 1 псевдослучайным образом
-    if (polarity) {
-        RandomInt signRand(seed++, 0, 1);
-        sign = signRand.get() ? 1.0 : -1.0;
-    }
+    sign = signRand.get() ? 1 : -1;
     
     size_t left = 0, right = 0;
     
@@ -149,20 +150,21 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
             if (impulseLength <= 0.0) continue;
 
             double endTime = startTime + impulseLength;
+        
+            // Вычисление начального индекса на основе startTime
+            size_t leftIndex = 0;
+            if (startTime <= xMax) {
+                // Вычисление индекса точки, где начинается импульс
+                leftIndex = static_cast<size_t>(std::ceil((startTime - xMin) / deltaT));
+                if (leftIndex >= signal.size()) {
+                    continue;  // Если индекс выходит за границы сигнала, пропускаем импульс
+                }
+            } else {
+                continue;  // startTime вне диапазона сигнала
+            }
 
-            // Сдвигаем left к первому индексу, где signal[left].x >= startTime
-            while (left < signal.size() && signal[left].x < startTime) {
-                ++left;
-            }
-            // Устанавливаем right равным left, так как диапазон начинается с left
-            right = left;
-            
-            // Продвигаем right, пока условие (x < endTime) выполняется
-            while (right < signal.size() && signal[right].x < endTime) {
-                ++right;
-            }
-            
-            for (size_t i = left; i < right; ++i) {
+            // Применение импульса к точкам, начиная с leftIndex, пока x < endTime
+            for (size_t i = leftIndex; i < signal.size() && signal[i].x < endTime; ++i) {
                 double localX = signal[i].x - startTime;
                 // Применяем значение импульса к точке signal[i]
                 signal[i].y += sign * getImpulseValue(form, localX, impulseLength, aVal, bVal);
