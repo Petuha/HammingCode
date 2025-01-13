@@ -211,7 +211,7 @@ std::vector<std::string> HammingCodeHandler::next()
 
 	std::vector<Dot> signal = generateSignalFromBits
 	(coded, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
-	signal = generateNoise
+	generateNoise
 	(iteration, signal, noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
 	std::string receivedBits = bitsFromSignal
 	(signal, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
@@ -277,12 +277,12 @@ std::vector<std::string> HammingCodeHandler::next()
 		auto addPlot = [&](int i, int seed) {
 			plots[i][0] = generateSignalFromBits
 			(bits, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
-			plots[i][0] = generateNoise
+			generateNoise
 			(seed, plots[i][0], noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
 
 			plots[i][1] = generateSignalFromBits
 			(coded, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
-			plots[i][1] = generateNoise
+			generateNoise
 			(seed, plots[i][1], noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
 			};
 		addPlot(0, experiments.rbegin()->second);

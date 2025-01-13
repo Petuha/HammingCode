@@ -49,7 +49,7 @@ TaskViewer::TaskViewer(QWidget* parent, HammingCode& mainClass) :
 	table->setGeometry(0, taskLabel->y() + taskLabel->height(), parent->width(), 2 * tableHeight);
 	answerLabel->setGeometry(0, table->y() + table->height() + 10, parent->width() / 2, tableHeight);
 	verdictLabel->setGeometry
-	(parent->width() / 2, answerLabel->y(), parent->width() / 2, answerLabel->height());
+	(parent->width() * 0.7, answerLabel->y(), parent->width() - parent->width() * 0.7, answerLabel->height());
 	verdictBox->setGeometry
 	(verdictLabel->x(), verdictLabel->y() + verdictLabel->height(),
 		verdictLabel->width(), verdictLabel->height());
