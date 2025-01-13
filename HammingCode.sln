@@ -24,6 +24,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CoderDecoder", "CoderDecode
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SignalIdentificator", "SignalIdentificator\SignalIdentificator.vcxproj", "{CE29E26F-EA61-4D43-8FA9-26A60281DE5B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{6819B889-917D-4B25-8281-70A3B800316F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SignalIdentificatorTest", "SignalIdentificatorTest\SignalIdentificatorTest.vcxproj", "{AEC843A2-B2BA-410F-ADD8-7FF91DD32CE5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -50,8 +54,15 @@ Global
 		{CE29E26F-EA61-4D43-8FA9-26A60281DE5B}.Debug|x64.Build.0 = Debug|x64
 		{CE29E26F-EA61-4D43-8FA9-26A60281DE5B}.Release|x64.ActiveCfg = Release|x64
 		{CE29E26F-EA61-4D43-8FA9-26A60281DE5B}.Release|x64.Build.0 = Release|x64
+		{AEC843A2-B2BA-410F-ADD8-7FF91DD32CE5}.Debug|x64.ActiveCfg = Debug|x64
+		{AEC843A2-B2BA-410F-ADD8-7FF91DD32CE5}.Debug|x64.Build.0 = Debug|x64
+		{AEC843A2-B2BA-410F-ADD8-7FF91DD32CE5}.Release|x64.ActiveCfg = Release|x64
+		{AEC843A2-B2BA-410F-ADD8-7FF91DD32CE5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AEC843A2-B2BA-410F-ADD8-7FF91DD32CE5} = {6819B889-917D-4B25-8281-70A3B800316F}
 	EndGlobalSection
 EndGlobal
