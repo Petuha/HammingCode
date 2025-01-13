@@ -30,6 +30,10 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                 // Manchester: 0 -> [A, -A], 1 -> [-A, A]
                 double firstHalf = (bit == '1') ? -A : A;
                 double secondHalf = -firstHalf;
+                if (polarity) {
+                    firstHalf = -firstHalf;
+                    secondHalf = -secondHalf;
+                }
 
                 int halfSteps = stepsPerBit / 2;
                 for (int i = 0; i < halfSteps; ++i) {
