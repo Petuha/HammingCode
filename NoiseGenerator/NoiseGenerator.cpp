@@ -138,8 +138,24 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
     sign = signRand.get() ? 1 : -1;
     
     size_t left = 0, right = 0;
-    
+    double leftIndex = 0;
     for (int sec = startSecond; sec <= endSecond; ++sec) {
+        
+        // Двигаем left до тех пор, пока не дойдём до точки,
+        // которая впервые >= sec (т.е. входит в данную секунду).
+        while (left < signal.size() && signal[left].x < sec) {
+            ++left;
+        }
+        if (left >= signal.size()) {
+            break; // выходим, дальше секунд уже нет в сигнале
+        }
+        // Теперь двигаем right до тех пор, пока не встретим точку >= sec+1
+        // (т.е. конец этой секунды)
+        right = left; 
+        while (right < signal.size() && signal[right].x < sec + 1.0) {
+            ++right;
+        }
+
         // Количество импульсов в текущей секунде
         int numImpulses = nuRand.get();
 
@@ -150,12 +166,12 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
             if (impulseLength <= 0.0) continue;
 
             double endTime = startTime + impulseLength;
-        
+            
             // Вычисление начального индекса на основе startTime
-            size_t leftIndex = 0;
+           
             if (startTime <= xMax) {
                 // Вычисление индекса точки, где начинается импульс
-                leftIndex = static_cast<size_t>(std::ceil((startTime - xMin) / deltaT));
+                leftIndex = std::ceil((startTime/deltaT);
                 if (leftIndex >= signal.size()) {
                     continue;  // Если индекс выходит за границы сигнала, пропускаем импульс
                 }
