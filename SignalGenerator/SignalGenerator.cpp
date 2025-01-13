@@ -5,7 +5,7 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
     conversionMethod method, double dt, double A, double bitDuration, bool polarity) 
 {
     std::vector<Dot> series; // Массив точек
-    bool lastPolarity = false; // Для метода AMI (следить за последней полярностью)
+    bool lastPolarity = polarity; // Для метода AMI (следить за последней полярностью)
     int stepsPerBit = static_cast<int>(ceil(bitDuration / dt)); // кол-во шагов на один бит
     series.reserve(stepsPerBit * bits.size());
     int globalStep = 0; // счётчик шагов
