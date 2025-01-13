@@ -1,4 +1,4 @@
-#include "../SignalGenerator/SignalGenerator.h"
+п»ї#include "../SignalGenerator/SignalGenerator.h"
 #include "../SignalIdentificator/SignalIdentificator.h"
 
 #include <iostream>
@@ -49,11 +49,11 @@ void testConversionMethod(conversionMethod method, double dt, double A, double b
 int main() {
     std::cout << "Starting tests..." << std::endl;
 
-    // Переменная для отслеживания общего статуса
+    // РџРµСЂРµРјРµРЅРЅР°СЏ РґР»СЏ РѕС‚СЃР»РµР¶РёРІР°РЅРёСЏ РѕР±С‰РµРіРѕ СЃС‚Р°С‚СѓСЃР°
     bool allTestsPassed = true;
     std::vector<std::string> failedTestsParams;
 
-    // Массив методов для тестирования
+    // РњР°СЃСЃРёРІ РјРµС‚РѕРґРѕРІ РґР»СЏ С‚РµСЃС‚РёСЂРѕРІР°РЅРёСЏ
     std::vector<conversionMethod> methods = {
             conversionMethod::NRZ,
             conversionMethod::MANCH,
@@ -61,7 +61,7 @@ int main() {
             conversionMethod::AMI
     };
 
-    // Количество тестов
+    // РљРѕР»РёС‡РµСЃС‚РІРѕ С‚РµСЃС‚РѕРІ
     int numTests = 100000;
     numTests *= 2;
 
@@ -83,7 +83,7 @@ int main() {
         }
     }
 
-    // Вывод результатов
+    // Р’С‹РІРѕРґ СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ
     if (!allTestsPassed) {
         std::cout << "Some tests failed. Failed test parameters:" << std::endl;
         for (const auto& failedTest : failedTestsParams) {
