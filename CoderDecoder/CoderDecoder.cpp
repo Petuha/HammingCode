@@ -115,7 +115,7 @@ void hammingErrorRestorer(std::string& bits, int chunksize, bool modified,
 				}
 			}
 		}
-		if (!syndrome) continue;
+		if (!syndrome || syndrome > codedChunkSize - modified) continue;
 		int index = i - codedChunkSize + modified + syndrome - 1;
 		bits[index] -= '0';
 		bits[index] ^= 1;
@@ -153,7 +153,7 @@ std::string hammingDecoder(const std::string& bits, int chunksize, bool modified
 
 HammingCodeHandler::HammingCodeHandler(std::string bits, int chunksize, bool modified,
 	conversionMethod signal_method, double signal_dt, double signal_A,
-	double signal_bitDuration, bool signal_polarity,
+	int signal_DotsPerBit, bool signal_polarity,
 	double noise_t, double noise_dt, int noise_nu, int noise_dnu,
 	noiseForm noise_form, bool noise_polarity, std::vector<double> noise_params,
 	int iterations) :
@@ -163,7 +163,7 @@ HammingCodeHandler::HammingCodeHandler(std::string bits, int chunksize, bool mod
 	signal_method(signal_method),
 	signal_dt(signal_dt),
 	signal_A(signal_A),
-	signal_bitDuration(signal_bitDuration),
+	signal_DotsPerBit(signal_DotsPerBit),
 	signal_polarity(signal_polarity),
 	noise_t(noise_t),
 	noise_dt(noise_dt),
@@ -210,11 +210,11 @@ std::vector<std::string> HammingCodeHandler::next()
 	std::vector<std::string> data(9 + modified);
 
 	std::vector<Dot> signal = generateSignalFromBits
-	(coded, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
+	(coded, signal_method, signal_dt, signal_A, signal_DotsPerBit, signal_polarity);
 	generateNoise
 	(iteration, signal, noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
 	std::string receivedBits = bitsFromSignal
-	(signal, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
+	(signal, signal_method, signal_dt, signal_A, signal_DotsPerBit, signal_polarity);
 
 	if (receivedBits.size() != coded.size()) return {}; // something really bad, bitsFromSignal problem
 
@@ -276,12 +276,9 @@ std::vector<std::string> HammingCodeHandler::next()
 		sort(experiments.begin(), experiments.end());
 		auto addPlot = [&](int i, int seed) {
 			plots[i][0] = generateSignalFromBits
-			(bits, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
-			generateNoise
-			(seed, plots[i][0], noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
+			(coded, signal_method, signal_dt, signal_A, signal_DotsPerBit, signal_polarity);
 
-			plots[i][1] = generateSignalFromBits
-			(coded, signal_method, signal_dt, signal_A, signal_bitDuration, signal_polarity);
+			plots[i][1] = plots[i][0];
 			generateNoise
 			(seed, plots[i][1], noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
 			};

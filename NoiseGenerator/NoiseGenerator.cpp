@@ -1,4 +1,5 @@
 ﻿#include "NoiseGenerator.h"
+#include <algorithm>
 
 double getImpulseValue(
 	noiseForm form,
@@ -82,7 +83,12 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
 	double deltaT = signal[1].x - signal[0].x;
 	int endSecond = static_cast<int>(std::floor(signal.back().x));
 
+	int left, right = 0;
+
 	for (int sec = 0; sec <= endSecond; ++sec) {
+		left = right;
+		while (right < signalSize && signal[right].x < sec + 1.0) ++right;
+
 		numImpulses = nuRand(rng);
 		for (int i = 0; i < numImpulses; ++i) {
 			startTime = sec + timeInSecRand(rng);
@@ -91,9 +97,15 @@ void generateNoise(int randSeed, std::vector<Dot>& signal, double t, double dt, 
 			sign = signRand(rng) == 1 ? 1 : -1;
 			aVal = aRand(rng);
 			bVal = bRand(rng);
-			for (int j = static_cast<int>(std::ceil(startTime / deltaT));
-				j < signalSize && signal[j].x < endTime; ++j) {
-				localX = signal[i].x - startTime;
+			auto get_index = [&]() -> int {
+				int index = std::distance(signal.begin(),
+					std::upper_bound(signal.begin() + left, signal.begin() + right, startTime,
+						[](double val, const Dot& d) { return val < d.x; }));
+				if (index - 1 >= 0 && signal[index - 1].x >= startTime) --index;
+				return index;
+				};
+			for (int j = get_index(); j < signalSize && signal[j].x < endTime; ++j) {
+				localX = signal[j].x - startTime;
 				signal[j].y += sign * getImpulseValue(form, localX, impulseLength, aVal, bVal);
 			}
 		}

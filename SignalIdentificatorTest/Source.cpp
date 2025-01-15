@@ -22,14 +22,21 @@ double getRandomDouble(double min, double max) {
     return dist(gen);
 }
 
+int getRandomInt(int min, int max) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(min, max);
+    return dist(gen);
+}
+
 std::vector<std::string> names = { "NRZ", "MANCH", "RZ", "AMI" };
 
-void testConversionMethod(conversionMethod method, double dt, double A, double bitDuration, bool polarity, bool& testPassed, std::string& failedParams) {
+void testConversionMethod(conversionMethod method, double dt, double A, int dotsPerBit, bool polarity, bool& testPassed, std::string& failedParams) {
     int testLength = 20;
     std::string originalBits = generateRandomBits(testLength);
 
-    std::vector<Dot> signal = generateSignalFromBits(originalBits, method, dt, A, bitDuration, polarity);
-    std::string decodedBits = bitsFromSignal(signal, method, dt, A, bitDuration, polarity);
+    std::vector<Dot> signal = generateSignalFromBits(originalBits, method, dt, A, dotsPerBit, polarity);
+    std::string decodedBits = bitsFromSignal(signal, method, dt, A, dotsPerBit, polarity);
 
     if (originalBits == decodedBits) {
         testPassed = true;
@@ -39,7 +46,7 @@ void testConversionMethod(conversionMethod method, double dt, double A, double b
         failedParams = "Method " + names[static_cast<int>(method)] +
             ": dt = " + std::to_string(dt) +
             ", A = " + std::to_string(A) +
-            ", bitDuration = " + std::to_string(bitDuration) +
+            ", dotsPerBit = " + std::to_string(dotsPerBit) +
             ", polarity = " + std::to_string(polarity) +
             ", originalBits = " + originalBits +
             ", decodedBits = " + decodedBits;
@@ -69,13 +76,14 @@ int main() {
         for (const auto& method : methods) {
             double dt = getRandomDouble(0.5, 10.0);
             double A = getRandomDouble(0.5, 10.0);
-            double bitDuration = getRandomDouble(dt, 11.0);
+            int dotsPerBit = getRandomInt(1, 6);
+            dotsPerBit *= 2;
             bool polarity = i % 2;
 
             bool testPassed = false;
             std::string failedParams;
 
-            testConversionMethod(method, dt, A, bitDuration, polarity, testPassed, failedParams);
+            testConversionMethod(method, dt, A, dotsPerBit, polarity, testPassed, failedParams);
             if (!testPassed) {
                 allTestsPassed = false;
                 failedTestsParams.push_back(failedParams);

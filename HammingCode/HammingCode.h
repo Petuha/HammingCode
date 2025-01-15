@@ -91,6 +91,10 @@ protected slots:
 private:
 	Ui::HammingCodeClass ui;
 
+	void setTablesEnabled(bool flag);
+	void lockTables();
+	void unlockTables();
+
 	enum { plotN = HammingCodeHandler::Plot::plotN, plotM = HammingCodeHandler::Plot::plotM };
 	QLineSeries* series[plotN][plotM];
 	QChart* chart[plotN][plotM];

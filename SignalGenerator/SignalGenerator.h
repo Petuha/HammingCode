@@ -21,4 +21,4 @@ enum class conversionMethod {
 
 // Функция для генерации сигнала из бит
 std::vector<Dot> generateSignalFromBits(const std::string& bits,
-    conversionMethod method, double dt, double A, double bitDuration, bool polarity);
+    conversionMethod method, double dt, double A, int dotsPerBit, bool polarity);

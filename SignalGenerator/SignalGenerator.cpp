@@ -2,11 +2,11 @@
 #include <cmath>     // Для математических операций
 
 std::vector<Dot> generateSignalFromBits(const std::string& bits,
-    conversionMethod method, double dt, double A, double bitDuration, bool polarity) 
+    conversionMethod method, double dt, double A, int dotsPerBit, bool polarity)
 {
     std::vector<Dot> series; // Массив точек
     bool lastPolarity = polarity; // Для метода AMI (следить за последней полярностью)
-    int stepsPerBit = static_cast<int>(ceil(bitDuration / dt)); // кол-во шагов на один бит
+    int stepsPerBit = dotsPerBit; // кол-во шагов на один бит
     series.reserve(stepsPerBit * bits.size());
     int globalStep = 0; // счётчик шагов
     double t = 0.0; // тайм текущей точки на X
@@ -23,6 +23,7 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                     series.emplace_back(t, amplitude);
                     ++globalStep;
                 }
+                --globalStep;
                 break;
             }
 
@@ -41,30 +42,27 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                     series.emplace_back(t, firstHalf);
                     ++globalStep;
                 }
+                --globalStep;
                 for (int i = halfSteps; i < stepsPerBit; ++i) {
                     t = globalStep * dt;
                     series.emplace_back(t, secondHalf);
                     ++globalStep;
                 }
+                --globalStep;
                 break;
             }
 
             case conversionMethod::RZ: {
-                // Return-to-Zero: 0 -> [0], 1 -> [A, 0]
+                // Return-to-Zero: 0 -> 0, 1 -> A
                 double amplitude = (bit == '1') ? A : 0;
                 if (polarity && bit == '1') amplitude = -amplitude;
 
-                int halfSteps = stepsPerBit / 2;
-                for (int i = 0; i < halfSteps; ++i) {
+                for (int i = 0; i < stepsPerBit; ++i) {
                     t = globalStep * dt;
                     series.emplace_back(t, amplitude);
                     ++globalStep;
                 }
-                for (int i = halfSteps; i < stepsPerBit; ++i) {
-                    t = globalStep * dt;
-                    series.emplace_back(t, 0.0);
-                    ++globalStep;
-                }
+                --globalStep;
                 break;
             }
 
@@ -81,6 +79,7 @@ std::vector<Dot> generateSignalFromBits(const std::string& bits,
                     series.emplace_back(t, amplitude);
                     ++globalStep;
                 }
+                --globalStep;
                 break;
             }
         }

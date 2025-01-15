@@ -3,4 +3,4 @@
 #include <iostream>
 #include <cmath>
 std::string bitsFromSignal(const std::vector<Dot>& signal,
-	conversionMethod method, double dt, double A, double bitDuration, bool polarity);
+	conversionMethod method, double dt, double A, int dotsPerBit, bool polarity);

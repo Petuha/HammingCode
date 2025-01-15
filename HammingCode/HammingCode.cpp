@@ -113,7 +113,7 @@ HammingCode::HammingCode(QWidget* parent)
 	tableParams[2]->item(0, 0)->setText("Метод преобразования");
 	tableParams[2]->item(1, 0)->setText("Шаг дискретизации");
 	tableParams[2]->item(2, 0)->setText("Амплитуда");
-	tableParams[2]->item(3, 0)->setText("Битовый интервал");
+	tableParams[2]->item(3, 0)->setText("Точек на бит");
 	tableParams[2]->item(4, 0)->setText("Полярность");
 
 	// Noise values
@@ -137,8 +137,8 @@ HammingCode::HammingCode(QWidget* parent)
 
 	// Hamming QCombos
 	modifiedBox = new FocusWhellComboBox(ui.centralWidget);
-	modifiedBox->addItem("Да");
 	modifiedBox->addItem("Нет");
+	modifiedBox->addItem("Да");
 	tableParams[1]->setCellWidget(2, 1, modifiedBox);
 
 	// Signal Qcombos
@@ -163,8 +163,8 @@ HammingCode::HammingCode(QWidget* parent)
 	tableParams[3]->setCellWidget(4, 1, noiseTypeBox);
 
 	noisePolarBox = new FocusWhellComboBox(ui.centralWidget);
-	noisePolarBox->addItem("Однополярный");
-	noisePolarBox->addItem("Биполярный");
+	noisePolarBox->addItem("Однополярная");
+	noisePolarBox->addItem("Биполярная");
 	tableParams[3]->setCellWidget(5, 1, noisePolarBox);
 
 	// Calculate button
@@ -265,8 +265,11 @@ HammingCode::HammingCode(QWidget* parent)
 	setDeafaultTableParams(tableParams[2], 1, 4);
 	setDeafaultTableParams(tableParams[3], 0, 4);
 	setDeafaultTableParams(tableParams[3], 6, tableParams[3]->rowCount());
+	tableParams[2]->item(3, 1)->setText("2");
+	tableParams[1]->item(0, 1)->setText("101010");
+	tableParams[1]->item(1, 1)->setText("6");
 
-
+	this->unlockTables();
 }
 
 
@@ -348,6 +351,7 @@ void HammingCode::plotChanged(int index)
 		//QString::number(plotSignalSelector->currentIndex()));
 
 	if (pchartview) {
+		pchartview->hide();
 		plotLayout->removeWidget(pchartview);
 		pchartview->setParent(0);
 	}
@@ -357,12 +361,35 @@ void HammingCode::plotChanged(int index)
 		return;
 	}
 	plotLayout->addWidget(ptr);
+	ptr->show();
 	pchartview = ptr;
 }
 
 void HammingCode::itemChanged(QTableWidgetItem* item)
 {
 	item->setBackground(Qt::white);
+}
+
+void HammingCode::setTablesEnabled(bool flag)
+{
+	for (int t = 0; t < tableN; ++t) {
+		tableParams[t]->setEnabled(flag);
+	}
+	modifiedBox->setEnabled(flag);
+	noiseTypeBox->setEnabled(flag);
+	noisePolarBox->setEnabled(flag);
+	signalMethodBox->setEnabled(flag);
+	signalPolarBox->setEnabled(flag);
+}
+
+void HammingCode::lockTables()
+{
+	setTablesEnabled(0);
+}
+
+void HammingCode::unlockTables()
+{
+	setTablesEnabled(1);
 }
 
 void HammingCode::calculate_clicked()
@@ -486,8 +513,24 @@ void HammingCode::calculate_clicked()
 			}
 			return 0;
 			};
+		auto checkDotsPerImpuls = [&]() -> bool {
+			if (!correctInt(tableParams[2]->item(3, 1)->text())) {
+				tableParams[2]->item(3, 1)->setBackground(Qt::red);
+				return 1;
+			}
+			int x = tableParams[2]->item(3, 1)->text().toInt();
+			if ((conversionMethod)signalMethodBox->currentIndex() == conversionMethod::MANCH) {
+				if (x >= 4 && x % 2 == 0) return 0;
+			}
+			else {
+				if (x >= 2) return 0;
+			}
+			tableParams[2]->item(3, 1)->setBackground(Qt::red);
+			return 1;
+			};
 
-		if (checkTablePositiveDouble(2, 1, 4)) return 1;
+		if (checkTablePositiveDouble(2, 1, 3)) return 1;
+		if (checkDotsPerImpuls()) return 1;
 		if (checkTableNonNegativeDouble(3, 0, 2)) return 1;
 		if (checkTableNonNegativeInteger(3, 2, 4)) return 1;
 		if (checkNoiseParams()) return 1;
@@ -540,8 +583,10 @@ void HammingCode::calculate_clicked()
 			dataTable = 0;
 		}
 		task->show();
+		this->lockTables();
 		return;
 	}
+	this->unlockTables();
 	task->hide();
 	plotErrorInfo->show();
 	plotErrorSelector->show();
@@ -574,7 +619,7 @@ void HammingCode::calculate_clicked()
 	conversionMethod signal_method = (conversionMethod)signalMethodBox->currentIndex();
 	double signal_dt = tableParams[2]->item(1, 1)->text().toDouble();
 	double signal_A = tableParams[2]->item(2, 1)->text().toDouble();
-	double signal_bitDuration = tableParams[2]->item(3, 1)->text().toDouble();
+	int signal_DotsPerBit = tableParams[2]->item(3, 1)->text().toInt();
 	bool signal_polarity = signalPolarBox->currentIndex();
 	double noise_t = tableParams[3]->item(0, 1)->text().toDouble();
 	double noise_dt = tableParams[3]->item(1, 1)->text().toDouble();
@@ -592,7 +637,7 @@ void HammingCode::calculate_clicked()
 	HammingCodeHandler handler(
 		bits, chunksize, modified,
 		signal_method, signal_dt, signal_A,
-		signal_bitDuration, signal_polarity,
+		signal_DotsPerBit, signal_polarity,
 		noise_t, noise_dt, noise_nu, noise_dnu,
 		noise_form, noise_polarity, noise_params,
 		iterations);
@@ -614,7 +659,7 @@ void HammingCode::calculate_clicked()
 	// add plots to view
 	auto newPlot = [&](int i, int j, const std::vector<Dot>& data) {
 		series[i][j] = new QLineSeries;
-		double margin = 3, minY = 0, minX = 0, maxY = 0, maxX = 0;
+		double marginX = 0, marginY = 3, minY = 0, minX = 0, maxY = 0, maxX = 0;
 		if (data.size()) {
 			minX = maxX = data[0].x;
 			minY = maxY = data[0].y;
@@ -631,8 +676,8 @@ void HammingCode::calculate_clicked()
 		chart[i][j]->legend()->hide();
 		chart[i][j]->addSeries(series[i][j]);
 		chart[i][j]->createDefaultAxes();
-		chart[i][j]->axes(Qt::Horizontal).first()->setRange(minX - margin, maxX + margin);
-		chart[i][j]->axes(Qt::Vertical).first()->setRange(minY - margin, maxY + margin);
+		chart[i][j]->axes(Qt::Horizontal).first()->setRange(minX - marginX, maxX + marginX);
+		chart[i][j]->axes(Qt::Vertical).first()->setRange(minY - marginY, maxY + marginY);
 
 		chart[i][j]->layout()->setContentsMargins(0, 0, 0, 0);
 		chart[i][j]->setBackgroundRoundness(0);
