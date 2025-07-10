@@ -1,5 +1,8 @@
 ﻿#include "CoderDecoder.h"
 
+const int TASK_LEN_MIN = 5;
+const int TASK_LEN_MAX = 10;
+
 int getcodedChunkSize(int chunksize, bool modified) {
 	auto additionalBits = [&]() -> int {
 		int n = 0, x = 1;
@@ -313,7 +316,6 @@ void HammingCodeHandler::setTrustLevel()
 
 TaskManager::TaskManager() :
 	rng(std::mt19937(time(0))),
-	rnum(std::uniform_int_distribution<std::mt19937::result_type>(4, 16)),
 	task(std::vector<std::string>(3))
 {
 	task[1] = task[2] = "0";
@@ -326,18 +328,19 @@ bool TaskManager::hasTasks()
 
 bool TaskManager::newTask()
 {
+	static std::uniform_int_distribution<std::mt19937::result_type> bitDistribution(0, 1);
+	static std::uniform_int_distribution<std::mt19937::result_type> taskLengthDistribution(TASK_LEN_MIN, TASK_LEN_MAX);
+	
 	if (task_num >= 4 || ansToTask != "") return 0;
-	auto randBits = [&]() -> std::string {
-		int n = rnum(rng);
-		std::string ret(n, '0');
-		for (int i = 0; i < n; ++i) {
-			ret[i] = '0' + rnum(rng) % 2;
-		}
-		return ret;
-		};
+
+	std::string data(taskLengthDistribution(rng), '0');
+	for (int i = 0; i < data.length(); ++i) {
+		data[i] = '0' + bitDistribution(rng);
+	}
+
+	task[0] = data;
 	task[1][0] = '0' + task_num % 2;
 	task[2][0] = '0' + task_num / 2 % 2;
-	task[0] = randBits();
 	verdictTotask = ModifiedVerdict::nonModified;
 	if (task[2][0] == '1') {
 		if (task[1][0] == '0') {
@@ -348,7 +351,7 @@ bool TaskManager::newTask()
 			task[0] = hammingCoder(task[0], chunkSize, 1);
 			for (char& c : task[0]) {
 				c -= '0';
-				c += rnum(rng) % 2;
+				c += bitDistribution(rng);
 				c %= 2;
 				c += '0';
 			}
@@ -364,7 +367,7 @@ bool TaskManager::newTask()
 			task[0] = hammingCoder(task[0], chunkSize, 0);
 			for (char& c : task[0]) {
 				c -= '0';
-				c += rnum(rng) % 2;
+				c += bitDistribution(rng);
 				c %= 2;
 				c += '0';
 			}
