@@ -6,6 +6,7 @@
 #include <QtCharts>
 #include <QtWidgets/Qwidget>
 #include <QtWidgets/QComboBox>
+#include <qwt_plot.h>
 #include "ui_HammingCode.h"
 #include "../CoderDecoder/CoderDecoder.h"
 

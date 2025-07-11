@@ -49,6 +49,7 @@ HammingCode::HammingCode(QWidget* parent)
 	int windowH = ui.centralWidget->parentWidget()->geometry().height();
 	int windowW = ui.centralWidget->parentWidget()->geometry().width();
 
+	QwtPlot* d_plot = new QwtPlot(this);
 
 	// Table labels
 	label[0] = new QLabel("Эксперимент", ui.centralWidget);
