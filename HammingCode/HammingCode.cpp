@@ -165,8 +165,10 @@ HammingCode::HammingCode(QWidget* parent)
 	tableParams[3]->setCellWidget(5, 1, noisePolarBox);
 
 	// Calculate button
-	setX(ui.calculate, tableParams[0]->width() + 30);
-	setY(ui.calculate, tableParams[0]->y());
+	setX(ui.calculate, tableParams[3]->x());
+	setY(ui.calculate, tableParams[3]->y() + tableParams[3]->height() + 10);
+	setWidth(ui.calculate, tableParams[3]->width());
+	setHeight(ui.calculate, 50);
 
 	// Plot Info Selectors
 	plotErrorSelector = new FocusWhellComboBox(ui.centralWidget);
@@ -198,8 +200,8 @@ HammingCode::HammingCode(QWidget* parent)
 	showTableButton->hide();
 
 	plotInfoWidget = new QWidget(ui.centralWidget);
-	setX(plotInfoWidget, ui.calculate->x() + ui.calculate->width() + 10);
-	setY(plotInfoWidget, ui.calculate->y());
+	setX(plotInfoWidget, tableParams[0]->x() + tableParams[0]->width() + 10);
+	setY(plotInfoWidget, tableParams[0]->y());
 	setWidth(plotInfoWidget, 700);
 	setHeight(plotInfoWidget, plotErrorSelector->height());
 	//plotInfoWidget->setStyleSheet("background-color: lightblue;");
