@@ -641,8 +641,10 @@ void HammingCode::calculate_clicked()
 	// Add Plot and Curves
 	if (plot == nullptr) {
 		plot = new QwtPlot;
+		plot->setAxisTitle(QwtPlot::xBottom, "t");
+		plot->setAxisTitle(QwtPlot::yLeft, "A");
 
-		QwtPlotGrid* grid = new QwtPlotGrid();
+		auto grid = new QwtPlotGrid();
 		grid->setMajorPen(QPen(Qt::gray, 1));
 		grid->setMinorPen(QPen(Qt::lightGray, 1));
 		grid->enableXMin(true);
@@ -653,6 +655,16 @@ void HammingCode::calculate_clicked()
 		magnifier->setMouseButton(Qt::MiddleButton);
 		auto panner = new QwtPlotPanner(plot->canvas());
 		panner->setMouseButton(Qt::RightButton);
+
+		// Use picker for displaying mouse position
+		auto picker = new QwtPlotPicker(
+			QwtPlot::xBottom, QwtPlot::yLeft,
+			QwtPlotPicker::CrossRubberBand,
+			QwtPicker::ActiveOnly,
+			plot->canvas());
+		picker->setRubberBandPen(QColor(Qt::red));
+		picker->setTrackerPen(QColor(Qt::black));
+		picker->setStateMachine(new QwtPickerDragPointMachine());
 	}
 
 	for (int i = 0; i < plotErrorVariantCount; ++i) {
@@ -666,6 +678,9 @@ void HammingCode::calculate_clicked()
 			curves[i][j]->setSamples(polygon);
 			curves[i][j]->setPen(Qt::blue, 1);
 			curves[i][j]->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+
+			QwtSymbol* symbol = new QwtSymbol(QwtSymbol::Diamond, QBrush(Qt::blue), QPen(Qt::blue, 0), QSize(8, 8));
+			curves[i][j]->setSymbol(symbol);
 		}
 	}
 	plotLayout->addWidget(plot);
