@@ -38,18 +38,14 @@ HammingCode::HammingCode(QWidget* parent)
 	this->setMinimumSize(1280, 720);
 
 	// Plots
-	for (int i = 0; i < plotN; ++i) {
-		for (int j = 0; j < plotM; ++j) {
-			series[i][j] = 0;
-			chart[i][j] = 0;
-			chartview[i][j] = 0;
+	for (int i = 0; i < plotErrorVariantCount; ++i) {
+		for (int j = 0; j < plotSignalVariantCount; ++j) {
+			curves[i][j] = 0;
 		}
 	}
 
 	int windowH = ui.centralWidget->parentWidget()->geometry().height();
 	int windowW = ui.centralWidget->parentWidget()->geometry().width();
-
-	QwtPlot* d_plot = new QwtPlot(this);
 
 	// Table labels
 	label[0] = new QLabel("Эксперимент", ui.centralWidget);
@@ -248,6 +244,7 @@ HammingCode::HammingCode(QWidget* parent)
 
 	// task viewer
 	taskWidget = new QWidget(ui.centralWidget);
+	taskWidget->hide();
 	setWidth(taskWidget, 500);
 	setHeight(taskWidget, 500);
 	setX(taskWidget, plotWidget->x() + (plotWidget->width() - taskWidget->width()) / 2);
@@ -289,10 +286,8 @@ void HammingCode::showTableClicked()
 void HammingCode::copyClicked()
 {
 	int maxWidth = 1920, maxHeight = 1080;
-	QChartView* chartView = chartview[plotErrorSelector->currentIndex()][plotSignalSelector->currentIndex()];
-	if (!chartView) return;
-	int width = chartView->width();
-	int height = chartView->height();
+	int width = plot->width();
+	int height = plot->height();
 	if (1.0 * height * maxWidth / width <= maxHeight) {
 		height = static_cast<int>(1.0 * height * maxWidth / width);
 		width = maxWidth;
@@ -304,7 +299,7 @@ void HammingCode::copyClicked()
 	QImage image(width, height, QImage::Format_ARGB32);
 	image.fill(Qt::transparent);
 	QPainter painter(&image);
-	chartView->render(&painter);
+	plot->render(&painter);
 	painter.end();
 	QClipboard* clipboard = QGuiApplication::clipboard();
 	if (!clipboard) return;
@@ -348,22 +343,9 @@ void HammingCode::noiseChanged(int index)
 
 void HammingCode::plotChanged(int index)
 {
-	//ui.statusBar->showMessage(QString::number(plotTypeSelector->currentIndex()) + " " + 
-		//QString::number(plotSignalSelector->currentIndex()));
-
-	if (pchartview) {
-		pchartview->hide();
-		plotLayout->removeWidget(pchartview);
-		pchartview->setParent(0);
-	}
-	QChartView* ptr = chartview[plotErrorSelector->currentIndex()][plotSignalSelector->currentIndex()];
-	if (!ptr) {
-		//ui.statusBar->showMessage("Pizda");
-		return;
-	}
-	plotLayout->addWidget(ptr);
-	ptr->show();
-	pchartview = ptr;
+	plot->detachItems(QwtPlotItem::Rtti_PlotCurve, false);
+	curves[plotErrorSelector->currentIndex()][plotSignalSelector->currentIndex()]->attach(plot);
+	plot->replot();
 }
 
 void HammingCode::itemChanged(QTableWidgetItem* item)
@@ -574,21 +556,20 @@ void HammingCode::calculate_clicked()
 		plotSignalSelector->setCurrentIndex(0);
 		copyPlotToClipboard->hide();
 		showTableButton->hide();
-		if (pchartview) {
-			plotLayout->removeWidget(pchartview);
-			pchartview->setParent(0);
-			pchartview = 0;
+		if (plot) {
+			plotLayout->removeWidget(plot);
+			plot->setParent(0);
 		}
 		if (dataTable) {
 			delete dataTable;
 			dataTable = 0;
 		}
-		task->show();
+		taskWidget->show();
 		this->lockTables();
 		return;
 	}
 	this->unlockTables();
-	task->hide();
+	taskWidget->hide();
 	plotErrorInfo->show();
 	plotErrorSelector->show();
 	plotErrorSelector->setCurrentIndex(0);
@@ -597,19 +578,17 @@ void HammingCode::calculate_clicked()
 	plotSignalSelector->setCurrentIndex(0);
 	copyPlotToClipboard->show();
 	showTableButton->show();
-	if (pchartview) {
-		plotLayout->removeWidget(pchartview);
-		pchartview->setParent(0);
-		pchartview = 0;
+	if (plot) {
+		plotLayout->removeWidget(plot);
+		plot->setParent(0);
 	}
-	for (int i = 0; i < plotN; ++i) {
-		for (int j = 0; j < plotM; ++j) {
-			delete series[i][j];
-			delete chart[i][j];
-			delete chartview[i][j];
-			series[i][j] = 0;
-			chart[i][j] = 0;
-			chartview[i][j] = 0;
+	for (int i = 0; i < plotErrorVariantCount; ++i) {
+		for (int j = 0; j < plotSignalVariantCount; ++j) {
+			if (curves[i][j] == nullptr)
+				continue;
+			curves[i][j]->detach();
+			delete curves[i][j];
+			curves[i][j] = nullptr;
 		}
 	}
 
@@ -657,40 +636,36 @@ void HammingCode::calculate_clicked()
 	// !!! add handler.trustlevel to table or to another place
 	dataTable->setTrustLevel(handler.min, handler.max, handler.trustlevel);
 
-	// add plots to view
-	auto newPlot = [&](int i, int j, const std::vector<Dot>& data) {
-		series[i][j] = new QLineSeries;
-		double marginX = 0, marginY = 3, minY = 0, minX = 0, maxY = 0, maxX = 0;
-		if (data.size()) {
-			minX = maxX = data[0].x;
-			minY = maxY = data[0].y;
-		}
-		for (auto& x : data) {
-			series[i][j]->append(x.x, x.y);
-			if (x.x < minX) minX = x.x;
-			if (x.x > maxX) maxX = x.x;
-			if (x.y < minY) minY = x.y;
-			if (x.y > maxY) maxY = x.y;
-		}
+	// Add Plot and Curves
+	if (plot == nullptr) {
+		plot = new QwtPlot;
 
-		chart[i][j] = new QChart;
-		chart[i][j]->legend()->hide();
-		chart[i][j]->addSeries(series[i][j]);
-		chart[i][j]->createDefaultAxes();
-		chart[i][j]->axes(Qt::Horizontal).first()->setRange(minX - marginX, maxX + marginX);
-		chart[i][j]->axes(Qt::Vertical).first()->setRange(minY - marginY, maxY + marginY);
+		QwtPlotGrid* grid = new QwtPlotGrid();
+		grid->setMajorPen(QPen(Qt::gray, 1));
+		grid->setMinorPen(QPen(Qt::lightGray, 1));
+		grid->enableXMin(true);
+		grid->enableYMin(true);
+		grid->attach(plot);
 
-		chart[i][j]->layout()->setContentsMargins(0, 0, 0, 0);
-		chart[i][j]->setBackgroundRoundness(0);
+		auto magnifier = new QwtPlotMagnifier(plot->canvas());
+		magnifier->setMouseButton(Qt::MiddleButton);
+		auto panner = new QwtPlotPanner(plot->canvas());
+		panner->setMouseButton(Qt::RightButton);
+	}
 
-		chartview[i][j] = new QChartView(chart[i][j]);
-		chartview[i][j]->setRenderHint(QPainter::Antialiasing);
-		};
-	for (int i = 0; i < plotN; ++i) {
-		for (int j = 0; j < plotM; ++j) {
-			newPlot(i, j, handler.plots[i][j]);
+	for (int i = 0; i < plotErrorVariantCount; ++i) {
+		for (int j = 0; j < plotSignalVariantCount; ++j) {
+			QPolygonF polygon;
+			for (auto& x : handler.plots[i][j]) {
+				polygon << QPointF(x.x, x.y);
+			}
+
+			curves[i][j] = new QwtPlotCurve;
+			curves[i][j]->setSamples(polygon);
+			curves[i][j]->setPen(Qt::blue, 1);
+			curves[i][j]->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 		}
 	}
-	plotLayout->addWidget(chartview[0][0]);
-	pchartview = chartview[0][0];
+	plotLayout->addWidget(plot);
+	curves[0][0]->attach(plot);
 }

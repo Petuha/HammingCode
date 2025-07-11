@@ -7,6 +7,11 @@
 #include <QtWidgets/Qwidget>
 #include <QtWidgets/QComboBox>
 #include <qwt_plot.h>
+#include <qwt_plot_curve.h>
+#include <qwt_plot_grid.h>
+#include <qwt_plot_magnifier.h>
+#include <qwt_plot_panner.h>
+#include <qwt_plot_zoomer.h>
 #include "ui_HammingCode.h"
 #include "../CoderDecoder/CoderDecoder.h"
 
@@ -38,8 +43,6 @@ class TaskViewer : public QWidget
 public:
 	TaskViewer(QWidget* parent, HammingCode& mainClass);
 	~TaskViewer();
-	void show();
-	void hide();
 	bool newTask();
 protected slots:
 	void check();
@@ -96,11 +99,11 @@ private:
 	void lockTables();
 	void unlockTables();
 
-	enum { plotN = HammingCodeHandler::Plot::plotN, plotM = HammingCodeHandler::Plot::plotM };
-	QLineSeries* series[plotN][plotM];
-	QChart* chart[plotN][plotM];
-	QChartView* chartview[plotN][plotM];
-	QChartView* pchartview = 0;
+	enum { plotErrorVariantCount = HammingCodeHandler::Plot::plotN, plotSignalVariantCount = HammingCodeHandler::Plot::plotM };
+	
+	QwtPlot* plot;
+	QwtPlotCurve* curves[plotErrorVariantCount][plotSignalVariantCount];
+
 	QWidget* plotWidget;
 	QHBoxLayout* plotLayout;
 
