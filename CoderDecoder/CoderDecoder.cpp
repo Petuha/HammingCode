@@ -181,10 +181,8 @@ HammingCodeHandler::HammingCodeHandler(std::string bits, int chunksize, bool mod
 	coded = hammingCoder(this->bits, chunksize, modified);
 }
 
-std::vector<std::string> HammingCodeHandler::next()
+IterationResult HammingCodeHandler::next()
 {
-	if (iteration == iterations) return {};
-
 	// do experiment
 
 	/*
@@ -210,7 +208,7 @@ std::vector<std::string> HammingCodeHandler::next()
 
 	кол-во верных вердиктов добавочного бита
 	*/
-	std::vector<std::string> data(9 + modified);
+	IterationResult ret;
 
 	std::vector<Dot> signal = generateSignalFromBits
 	(coded, signal_method, signal_dt, signal_A, signal_DotsPerBit, signal_polarity);
@@ -259,40 +257,46 @@ std::vector<std::string> HammingCodeHandler::next()
 
 	double errorPercent = 1.0 * errorsDecoded / decodedBits.size();
 
-	data[0] = std::to_string(iteration); // номер итерации
-	data[1] = std::move(receivedBits); // принятая
-	data[2] = std::move(receivedBitsRestored); // восстановленная
-	data[3] = std::move(decodedBits); // конечная
-	data[4] = std::to_string(brokenBits); // искажённые помехой
-	data[5] = std::to_string(correctRestoredBitsCoded); // верно исправленные в закодированной последовательности
-	data[6] = std::to_string(correctRestoredBitsDecoded); // верно исправленные в декодированной последовательности
-	data[7] = std::to_string(errorsDecoded); // ошибки в декодированной последовательности
-	data[8] = std::to_string(errorPercent); // процент ошибок в декодированной последовательности
-	if (modified) data[9] = std::to_string(correctModifiedVerdicts); // верные срабатывания проверочного бита
-
+	ret.tableRow = std::vector<std::string>(9 + modified);
+	ret.tableRow[0] = std::to_string(iteration); // номер итерации
+	ret.tableRow[1] = std::move(receivedBits); // принятая
+	ret.tableRow[2] = std::move(receivedBitsRestored); // восстановленная
+	ret.tableRow[3] = std::move(decodedBits); // конечная
+	ret.tableRow[4] = std::to_string(brokenBits); // искажённые помехой
+	ret.tableRow[5] = std::to_string(correctRestoredBitsCoded); // верно исправленные в закодированной последовательности
+	ret.tableRow[6] = std::to_string(correctRestoredBitsDecoded); // верно исправленные в декодированной последовательности
+	ret.tableRow[7] = std::to_string(errorsDecoded); // ошибки в декодированной последовательности
+	ret.tableRow[8] = std::to_string(errorPercent); // процент ошибок в декодированной последовательности
+	if (modified) ret.tableRow[9] = std::to_string(correctModifiedVerdicts); // верные срабатывания проверочного бита
 
 	experiments.push_back({ errorPercent, iteration });
 	++iteration;
 
-	if (iteration == iterations) {
-		// prepare plots
-		sort(experiments.begin(), experiments.end());
-		auto addPlot = [&](int i, int seed) {
-			plots[i][0] = generateSignalFromBits
-			(coded, signal_method, signal_dt, signal_A, signal_DotsPerBit, signal_polarity);
+	auto getSignalValues = [&](int seed) {
+		SignalPair values;
+		values.sent = values.received = generateSignalFromBits(coded, signal_method, signal_dt, signal_A, signal_DotsPerBit, signal_polarity);
+		generateNoise(seed, values.received, noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
+		return values;
+	};
+	ret.values = getSignalValues(iteration);
 
-			plots[i][1] = plots[i][0];
-			generateNoise
-			(seed, plots[i][1], noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
-			};
-		addPlot(0, experiments.rbegin()->second);
-		addPlot(1, experiments.begin()->second);
-		addPlot(2, experiments[experiments.size() / 2].second);
-		addPlot(3, greatestCorrectRestored.second);
+	if (iteration == iterations) {
+		// Prepare signals
+		sort(experiments.begin(), experiments.end());
+
+		maxErrorValues = getSignalValues(experiments.rbegin()->second);
+		minErrorValues = getSignalValues(experiments.begin()->second);
+		medianErrorValues = getSignalValues(experiments[experiments.size() / 2].second);
+		maxCorrectedErrorValues = getSignalValues(greatestCorrectRestored.second);
+
 		setTrustLevel();
 	}
 
-	return data;
+	return ret;
+}
+
+bool HammingCodeHandler::hasNext() {
+	return iteration != iterations;
 }
 
 void HammingCodeHandler::setTrustLevel()

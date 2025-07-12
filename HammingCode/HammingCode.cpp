@@ -32,17 +32,9 @@ QPixmap htmlText(const QString& text) {
 HammingCode::HammingCode(QWidget* parent)
 	: QMainWindow(parent)
 {
-
 	ui.setupUi(this);
 
 	this->setMinimumSize(1280, 720);
-
-	// Plots
-	for (int i = 0; i < plotErrorVariantCount; ++i) {
-		for (int j = 0; j < plotSignalVariantCount; ++j) {
-			curves[i][j] = 0;
-		}
-	}
 
 	int windowH = ui.centralWidget->parentWidget()->geometry().height();
 	int windowW = ui.centralWidget->parentWidget()->geometry().width();
@@ -172,10 +164,7 @@ HammingCode::HammingCode(QWidget* parent)
 
 	// Plot Info Selectors
 	plotErrorSelector = new FocusWhellComboBox(ui.centralWidget);
-	plotErrorSelector->addItem("Наибольшая");
-	plotErrorSelector->addItem("Наименьшая");
-	plotErrorSelector->addItem("Медианная");
-	plotErrorSelector->addItem("Наибольшая верно исправленная");
+	plotErrorSelector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 	plotErrorSelector->hide();
 
 	plotErrorInfo = new QLabel(ui.centralWidget);
@@ -342,10 +331,38 @@ void HammingCode::noiseChanged(int index)
 	pindex = index;
 }
 
-void HammingCode::plotChanged(int index)
+void HammingCode::plotChanged(int _)
 {
 	plot->detachItems(QwtPlotItem::Rtti_PlotCurve, false);
-	curves[plotErrorSelector->currentIndex()][plotSignalSelector->currentIndex()]->attach(plot);
+
+	CurvePair* pair;
+	switch (plotErrorSelector->currentIndex()) {
+	case -1:
+		return;
+	case 0:
+		pair = &curves.maxError;
+		break;
+	case 1:
+		pair = &curves.minError;
+		break;
+	case 2:
+		pair = &curves.medianError;
+		break;
+	case 3:
+		pair = &curves.maxCorrectedError;
+		break;
+	default:
+		pair = &curves.iterations[plotErrorSelector->currentIndex() - 4];
+		break;
+	}
+	switch (plotSignalSelector->currentIndex()) {
+	case 0:
+		pair->sent->attach(plot);
+		break;
+	case 1:
+		pair->received->attach(plot);
+		break;
+	}
 }
 
 void HammingCode::itemChanged(QTableWidgetItem* item)
@@ -550,10 +567,8 @@ void HammingCode::calculate_clicked()
 	if (task->newTask()) {
 		plotErrorInfo->hide();
 		plotErrorSelector->hide();
-		plotErrorSelector->setCurrentIndex(0);
 		plotSignalInfo->hide();
 		plotSignalSelector->hide();
-		plotSignalSelector->setCurrentIndex(0);
 		copyPlotToClipboard->hide();
 		showTableButton->hide();
 		if (plot) {
@@ -572,25 +587,16 @@ void HammingCode::calculate_clicked()
 	taskWidget->hide();
 	plotErrorInfo->show();
 	plotErrorSelector->show();
-	plotErrorSelector->setCurrentIndex(0);
 	plotSignalInfo->show();
 	plotSignalSelector->show();
-	plotSignalSelector->setCurrentIndex(0);
 	copyPlotToClipboard->show();
 	showTableButton->show();
 	if (plot) {
 		plotLayout->removeWidget(plot);
 		plot->setParent(0);
+		plot->detachItems(QwtPlotItem::Rtti_PlotCurve, false);
 	}
-	for (int i = 0; i < plotErrorVariantCount; ++i) {
-		for (int j = 0; j < plotSignalVariantCount; ++j) {
-			if (curves[i][j] == nullptr)
-				continue;
-			curves[i][j]->detach();
-			delete curves[i][j];
-			curves[i][j] = nullptr;
-		}
-	}
+	curves.iterations.clear();
 
 	// get params from input
 	std::string bits = tableParams[1]->item(0, 1)->text().toStdString();
@@ -624,19 +630,42 @@ void HammingCode::calculate_clicked()
 
 	delete dataTable;
 	dataTable = new DataTable(iterations, modified);
-	//dataTable->show();
 
-	std::vector<std::string> rowData;
-	do {
-		rowData = handler.next();
-		// !!! add data to table
-		dataTable->addRow(rowData);
+	auto generateCurve = [&](std::vector<Dot> points) {
+		QPolygonF polygon;
+		for (auto& p : points) {
+			polygon << QPointF(p.x, p.y);
+		}
 
-	} while (rowData.size());
+		auto curve = new QwtPlotCurve;
+		curve->setSamples(polygon);
+		curve->setPen(Qt::blue, 1);
+		curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+
+		QwtSymbol* symbol = new QwtSymbol(QwtSymbol::Diamond, QBrush(Qt::blue), QPen(Qt::blue, 0), QSize(8, 8));
+		curve->setSymbol(symbol);
+		return std::unique_ptr<QwtPlotCurve>(curve);
+	};
+
+	auto generateCurvePair = [&](SignalPair p) {
+		return CurvePair(generateCurve(p.sent), generateCurve(p.received));
+	};
+
+	// Get table data and curves
+	while (handler.hasNext()) {
+		auto res = handler.next();
+		dataTable->addRow(res.tableRow);
+		curves.iterations.push_back(generateCurvePair(res.values));
+	}
+	curves.maxError = generateCurvePair(handler.maxErrorValues);
+	curves.minError = generateCurvePair(handler.minErrorValues);
+	curves.medianError = generateCurvePair(handler.medianErrorValues);
+	curves.maxCorrectedError = generateCurvePair(handler.maxCorrectedErrorValues);
+
 	// !!! add handler.trustlevel to table or to another place
 	dataTable->setTrustLevel(handler.min, handler.max, handler.trustlevel);
 
-	// Add Plot and Curves
+	// Add plot
 	if (plot == nullptr) {
 		plot = new QwtPlot;
 		plot->setAutoReplot(true);
@@ -667,22 +696,19 @@ void HammingCode::calculate_clicked()
 		picker->setStateMachine(new QwtPickerDragPointMachine());
 	}
 
-	for (int i = 0; i < plotErrorVariantCount; ++i) {
-		for (int j = 0; j < plotSignalVariantCount; ++j) {
-			QPolygonF polygon;
-			for (auto& x : handler.plots[i][j]) {
-				polygon << QPointF(x.x, x.y);
-			}
-
-			curves[i][j] = new QwtPlotCurve;
-			curves[i][j]->setSamples(polygon);
-			curves[i][j]->setPen(Qt::blue, 1);
-			curves[i][j]->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-
-			QwtSymbol* symbol = new QwtSymbol(QwtSymbol::Diamond, QBrush(Qt::blue), QPen(Qt::blue, 0), QSize(8, 8));
-			curves[i][j]->setSymbol(symbol);
-		}
-	}
 	plotLayout->addWidget(plot);
-	curves[0][0]->attach(plot);
+
+	// Update error selector
+	plotErrorSelector->clear();
+	plotErrorSelector->addItem("Наибольшая");
+	plotErrorSelector->addItem("Наименьшая");
+	plotErrorSelector->addItem("Медианная");
+	plotErrorSelector->addItem("Наибольшая верно исправленная");
+	for (int i = 0; i < curves.iterations.size(); i++) {
+		plotErrorSelector->addItem(QString("Итерация №%1").arg(i));
+	}
+
+	// Select plot
+	plotErrorSelector->setCurrentIndex(0);
+	plotSignalSelector->setCurrentIndex(0);
 }

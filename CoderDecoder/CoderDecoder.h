@@ -6,12 +6,24 @@
 #include "../NoiseGenerator/NoiseGenerator.h"
 #include "../SignalIdentificator/SignalIdentificator.h"
 #include <random>
+
+struct SignalPair {
+	std::vector<Dot> sent;
+	std::vector<Dot> received;
+};
+
+struct IterationResult 
+{
+public:
+	SignalPair values;
+	std::vector<std::string> tableRow;
+};
+
 /*
 Класс, который будет моделировать эксперименты
 */
 class HammingCodeHandler {
 public:
-	enum class Plot { plotN = 4, plotM = 2 };
 	HammingCodeHandler(std::string bits, int chunksize, bool modified,
 		conversionMethod signal_method, double signal_dt, double signal_A,
 		int signal_DotsPerBit, bool signal_polarity,
@@ -40,8 +52,12 @@ public:
 	Только для модифицированного
 	[9]	- кол-во верных срабатываний проверочного бита
 	*/
-	std::vector<std::string> next();
-	std::vector<Dot> plots[(int)Plot::plotN][(int)Plot::plotM]; // all necessary plots
+	IterationResult next();
+	bool hasNext();
+	SignalPair maxErrorValues;
+	SignalPair minErrorValues;
+	SignalPair medianErrorValues;
+	SignalPair maxCorrectedErrorValues;
 	double trustlevel = -1;
 	double min = -1;
 	double max = -1;
