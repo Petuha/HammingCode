@@ -269,8 +269,8 @@ HammingCode::~HammingCode()
 void HammingCode::showTableClicked()
 {
 	if (dataTable) {
-		dataTable->hide();
 		dataTable->show();
+		dataTable->resizeToContentAndCenter();
 	}
 }
 

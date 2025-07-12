@@ -5,6 +5,8 @@
 #include <QtCore>
 #include <QtGui>
 #include <QtWidgets>
+#include <QGuiApplication>
+#include <QScreen>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
@@ -71,10 +73,8 @@ class DataTable : public QWidget
 public:
 	DataTable(int iterations, bool modified);
 	void addRow(const std::vector<std::string>& data);
+	void resizeToContentAndCenter();
 	void setTrustLevel(double min, double max, double lvl);
-	~DataTable();
-	void show();
-	void hide();
 private:
 	int i;
 	QTableWidget* table;
