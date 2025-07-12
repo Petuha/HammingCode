@@ -652,6 +652,7 @@ void HammingCode::calculate_clicked()
 
 		auto magnifier = new QwtPlotMagnifier(plot->canvas());
 		magnifier->setMouseButton(Qt::MiddleButton);
+		magnifier->setWheelFactor(1.1); // invert controls
 		auto panner = new QwtPlotPanner(plot->canvas());
 		panner->setMouseButton(Qt::RightButton);
 
