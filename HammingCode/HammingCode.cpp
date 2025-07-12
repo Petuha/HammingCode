@@ -272,11 +272,9 @@ void HammingCode::copyClicked()
 	double ratio = width < height ? static_cast<double>(TARGET_WIDTH) / width : static_cast<double>(TARGET_HEIGHT) / height;
 
 	QImage image(width * ratio, height * ratio, QImage::Format_ARGB32);
-	image.fill(Qt::transparent);
-	image.setDevicePixelRatio(ratio);
-
 	QPainter painter(&image);
-	plot->render(&painter);
+	QwtPlotRenderer renderer;
+	renderer.render(plot, &painter, image.rect());
 	painter.end();
 
 	QClipboard* clipboard = QGuiApplication::clipboard();
@@ -591,7 +589,7 @@ void HammingCode::calculate_clicked()
 
 		auto curve = new QwtPlotCurve;
 		curve->setSamples(polygon);
-		curve->setPen(Qt::blue, 1);
+		curve->setPen(Qt::blue, 2);
 		curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 
 		QwtSymbol* symbol = new QwtSymbol(QwtSymbol::Diamond, QBrush(Qt::blue), QPen(Qt::blue, 0), QSize(8, 8));
