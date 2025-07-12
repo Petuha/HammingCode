@@ -705,7 +705,7 @@ void HammingCode::calculate_clicked()
 	plotErrorSelector->addItem("Медианная");
 	plotErrorSelector->addItem("Наибольшая верно исправленная");
 	for (int i = 0; i < curves.iterations.size(); i++) {
-		plotErrorSelector->addItem(QString("Итерация №%1").arg(i));
+		plotErrorSelector->addItem(QString("Итерация №%1").arg(i + 1));
 	}
 
 	// Select plot

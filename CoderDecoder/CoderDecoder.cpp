@@ -258,7 +258,7 @@ IterationResult HammingCodeHandler::next()
 	double errorPercent = 1.0 * errorsDecoded / decodedBits.size();
 
 	ret.tableRow = std::vector<std::string>(9 + modified);
-	ret.tableRow[0] = std::to_string(iteration); // номер итерации
+	ret.tableRow[0] = std::to_string(iteration + 1); // номер итерации
 	ret.tableRow[1] = std::move(receivedBits); // принятая
 	ret.tableRow[2] = std::move(receivedBitsRestored); // восстановленная
 	ret.tableRow[3] = std::move(decodedBits); // конечная
