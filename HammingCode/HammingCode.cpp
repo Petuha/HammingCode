@@ -287,22 +287,21 @@ void HammingCode::showTableClicked()
 
 void HammingCode::copyClicked()
 {
-	int maxWidth = 1920, maxHeight = 1080;
+	const int TARGET_WIDTH = 1920;
+	const int TARGET_HEIGHT = 1080;
+
 	int width = plot->width();
 	int height = plot->height();
-	if (1.0 * height * maxWidth / width <= maxHeight) {
-		height = static_cast<int>(1.0 * height * maxWidth / width);
-		width = maxWidth;
-	}
-	else {
-		width = static_cast<int>(1.0 * width * maxHeight / height);
-		height = maxHeight;
-	}
-	QImage image(width, height, QImage::Format_ARGB32);
+	double ratio = width < height ? static_cast<double>(TARGET_WIDTH) / width : static_cast<double>(TARGET_HEIGHT) / height;
+
+	QImage image(width * ratio, height * ratio, QImage::Format_ARGB32);
 	image.fill(Qt::transparent);
+	image.setDevicePixelRatio(ratio);
+
 	QPainter painter(&image);
 	plot->render(&painter);
 	painter.end();
+
 	QClipboard* clipboard = QGuiApplication::clipboard();
 	if (!clipboard) return;
 	clipboard->setImage(image);
