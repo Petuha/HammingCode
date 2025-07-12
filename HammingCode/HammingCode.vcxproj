@@ -37,14 +37,14 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.8.1_msvc2022_64</QtInstall>
-    <QtModules>core;gui;widgets;charts</QtModules>
+    <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtDeploy>false</QtDeploy>
     <QtDeployCopyFiles>false</QtDeployCopyFiles>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>6.8.1_static</QtInstall>
-    <QtModules>core;gui;widgets;charts</QtModules>
+    <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
     <QtDeploy>false</QtDeploy>
     <QtDeployCopyFiles>false</QtDeployCopyFiles>

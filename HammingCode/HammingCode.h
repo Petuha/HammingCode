@@ -3,9 +3,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QtCore>
 #include <QtGui>
-#include <QtCharts>
-#include <QtWidgets/Qwidget>
-#include <QtWidgets/QComboBox>
+#include <QtWidgets>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
