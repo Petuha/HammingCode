@@ -48,7 +48,7 @@ HammingCode::HammingCode(QWidget* parent)
 	// Table params
 	tableParams[1] = new QTableWidget(3, 2, ui.centralWidget);
 	tableParams[2] = new QTableWidget(5, 2, ui.centralWidget);
-	tableParams[3] = new QTableWidget(8, 2, ui.centralWidget);
+	tableParams[3] = new QTableWidget(7, 2, ui.centralWidget);
 	tableParams[0] = new QTableWidget(1, 2, ui.centralWidget);
 	for (int param = 0; param < tableN; ++param) {
 		for (int i = 0; i < tableParams[param]->rowCount(); ++i) {
@@ -116,10 +116,9 @@ HammingCode::HammingCode(QWidget* parent)
 	tableParams[3]->item(1, 0)->setIcon(htmlText("<math>&Delta;t</math>"));
 	tableParams[3]->item(2, 0)->setIcon(htmlText("<math>&nu;</math>"));
 	tableParams[3]->item(3, 0)->setIcon(htmlText("<math>&Delta;&nu;</math>"));
-	tableParams[3]->item(4, 0)->setIcon(htmlText("<math>Форма</math>"));
-	tableParams[3]->item(5, 0)->setIcon(htmlText("<math>Полярность</math>"));
-	tableParams[3]->item(6, 0)->setIcon(htmlText("<math>a</math>"));
-	tableParams[3]->item(7, 0)->setIcon(htmlText("<math>&Delta;a</math>"));
+	tableParams[3]->item(4, 0)->setIcon(htmlText("<math>Полярность</math>"));
+	tableParams[3]->item(5, 0)->setIcon(htmlText("<math>a</math>"));
+	tableParams[3]->item(6, 0)->setIcon(htmlText("<math>&Delta;a</math>"));
 
 	// Experiment values
 	tableParams[0]->item(0, 0)->setText("Число итераций");
@@ -144,17 +143,10 @@ HammingCode::HammingCode(QWidget* parent)
 	tableParams[2]->setCellWidget(4, 1, signalPolarBox);
 
 	// Noise Qcombos
-	noiseTypeBox = new FocusWhellComboBox(ui.centralWidget);
-	noiseTypeBox->setIconSize(tableParams[3]->iconSize());
-	noiseTypeBox->addItem(QIcon(htmlText("<math>a</math>")), "");
-	noiseTypeBox->addItem(QIcon(htmlText("<math>a sin(bx)</math>")), "");
-	noiseTypeBox->addItem(QIcon(htmlText("<math>ax<sup>2</sup></math>")), "");
-	tableParams[3]->setCellWidget(4, 1, noiseTypeBox);
-
 	noisePolarBox = new FocusWhellComboBox(ui.centralWidget);
 	noisePolarBox->addItem("Однополярная");
 	noisePolarBox->addItem("Биполярная");
-	tableParams[3]->setCellWidget(5, 1, noisePolarBox);
+	tableParams[3]->setCellWidget(4, 1, noisePolarBox);
 
 	// Calculate button
 	setX(ui.calculate, tableParams[3]->x());
@@ -193,7 +185,6 @@ HammingCode::HammingCode(QWidget* parent)
 	setY(plotInfoWidget, tableParams[0]->y());
 	setWidth(plotInfoWidget, 700);
 	setHeight(plotInfoWidget, plotErrorSelector->height());
-	//plotInfoWidget->setStyleSheet("background-color: lightblue;");
 
 	// Plot Info Area
 	plotInfoLayout = new QHBoxLayout(plotInfoWidget);
@@ -214,12 +205,10 @@ HammingCode::HammingCode(QWidget* parent)
 		plotInfoWidget->y() + plotInfoWidget->height(),
 		windowW - plotInfoWidget->x(),
 		windowH - (plotInfoWidget->y() + plotInfoWidget->height()));
-	//plotWidget->setStyleSheet("background-color: lightblue;");
 	plotLayout = new QHBoxLayout(plotWidget);
 	plotLayout->setContentsMargins(0, 0, 0, 0);
 
 	// connects
-	connect(noiseTypeBox, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::noiseChanged);
 	connect(plotErrorSelector, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::plotChanged);
 	connect(plotSignalSelector, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::plotChanged);
 	connect(copyPlotToClipboard, SIGNAL(clicked()), this, SLOT(copyClicked()));
@@ -240,7 +229,6 @@ HammingCode::HammingCode(QWidget* parent)
 	setHeight(taskWidget, 500);
 	setX(taskWidget, plotWidget->x() + (plotWidget->width() - taskWidget->width()) / 2);
 	setY(taskWidget, plotWidget->y() + (plotWidget->height() - taskWidget->height()) / 2);
-	//taskWidget->setStyleSheet("background-color: lightblue;");
 	task = new TaskViewer(taskWidget, *this);
 
 	// set default params
@@ -253,7 +241,7 @@ HammingCode::HammingCode(QWidget* parent)
 	setDeafaultTableParams(tableParams[1], 0, 2);
 	setDeafaultTableParams(tableParams[2], 1, 4);
 	setDeafaultTableParams(tableParams[3], 0, 4);
-	setDeafaultTableParams(tableParams[3], 6, tableParams[3]->rowCount());
+	setDeafaultTableParams(tableParams[3], 5, tableParams[3]->rowCount());
 	tableParams[2]->item(3, 1)->setText("2");
 	tableParams[1]->item(0, 1)->setText("101010");
 	tableParams[1]->item(1, 1)->setText("6");
@@ -294,41 +282,6 @@ void HammingCode::copyClicked()
 	QClipboard* clipboard = QGuiApplication::clipboard();
 	if (!clipboard) return;
 	clipboard->setImage(image);
-}
-
-void HammingCode::noiseChanged(int index)
-{
-	static int pindex = -1;
-	if (index == 1) {
-		tableParams[3]->setRowCount(tableParams[3]->rowCount() + 2);
-
-		tableParams[3]->setItem(tableParams[3]->rowCount() - 2, 0, new QTableWidgetItem());
-		tableParams[3]->setItem(tableParams[3]->rowCount() - 2, 1, new QTableWidgetItem());
-		tableParams[3]->setItem(tableParams[3]->rowCount() - 1, 0, new QTableWidgetItem());
-		tableParams[3]->setItem(tableParams[3]->rowCount() - 1, 1, new QTableWidgetItem());
-
-		tableParams[3]->item(tableParams[3]->rowCount() - 2, 0)->setFlags(Qt::ItemIsEnabled);
-		tableParams[3]->item(tableParams[3]->rowCount() - 2, 0)->setIcon(htmlText("<math>b</math>"));
-		tableParams[3]->item(tableParams[3]->rowCount() - 1, 0)->setFlags(Qt::ItemIsEnabled);
-		tableParams[3]->item(tableParams[3]->rowCount() - 1, 0)->setIcon(htmlText("<math>&Delta;b</math>"));
-
-		setHeight(tableParams[3],
-			tableParams[3]->height() + 2 * tableParams[3]->verticalHeader()->defaultSectionSize());
-	}
-	else {
-		if (pindex == 1) {
-			delete tableParams[3]->item(tableParams[3]->rowCount() - 2, 0);
-			delete tableParams[3]->item(tableParams[3]->rowCount() - 2, 1);
-			delete tableParams[3]->item(tableParams[3]->rowCount() - 1, 0);
-			delete tableParams[3]->item(tableParams[3]->rowCount() - 1, 1);
-
-			setHeight(tableParams[3],
-				tableParams[3]->height() - 2 * tableParams[3]->verticalHeader()->defaultSectionSize());
-
-			tableParams[3]->setRowCount(tableParams[3]->rowCount() - 2);
-		}
-	}
-	pindex = index;
 }
 
 void HammingCode::plotChanged(int _)
@@ -376,7 +329,6 @@ void HammingCode::setTablesEnabled(bool flag)
 		tableParams[t]->setEnabled(flag);
 	}
 	modifiedBox->setEnabled(flag);
-	noiseTypeBox->setEnabled(flag);
 	noisePolarBox->setEnabled(flag);
 	signalMethodBox->setEnabled(flag);
 	signalPolarBox->setEnabled(flag);
@@ -497,7 +449,7 @@ void HammingCode::calculate_clicked()
 			return 0;
 			};
 		auto checkNoiseParams = [&]() -> bool {
-			for (int i = 6, parity = 0; i < tableParams[3]->rowCount(); ++i, ++parity) {
+			for (int i = 5, parity = 0; i < tableParams[3]->rowCount(); ++i, ++parity) {
 				if (parity % 2 == 0) {
 					if (!correctDouble(tableParams[3]->item(i, 1)->text())) {
 						tableParams[3]->item(i, 1)->setBackground(Qt::red);
@@ -611,10 +563,10 @@ void HammingCode::calculate_clicked()
 	double noise_dt = tableParams[3]->item(1, 1)->text().toDouble();
 	int noise_nu = tableParams[3]->item(2, 1)->text().toInt();
 	int noise_dnu = tableParams[3]->item(3, 1)->text().toInt();
-	noiseForm noise_form = (noiseForm)noiseTypeBox->currentIndex();
+	noiseForm noise_form = noiseForm::RECTANGULAR;
 	bool noise_polarity = noisePolarBox->currentIndex();
 	std::vector<double> noise_params;
-	for (int i = 6; i < tableParams[3]->rowCount(); ++i) {
+	for (int i = 5; i < tableParams[3]->rowCount(); ++i) {
 		noise_params.push_back(tableParams[3]->item(i, 1)->text().toDouble());
 	}
 	int iterations = tableParams[0]->item(0, 1)->text().toInt();

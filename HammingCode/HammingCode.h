@@ -113,7 +113,6 @@ protected slots:
 	void calculate_clicked();
 	void showTableClicked();
 	void copyClicked();
-	void noiseChanged(int index);
 	void plotChanged(int index);
 	void itemChanged(QTableWidgetItem* item);
 private:
@@ -147,7 +146,6 @@ private:
 
 	FocusWhellComboBox* modifiedBox;
 
-	FocusWhellComboBox* noiseTypeBox;
 	FocusWhellComboBox* noisePolarBox;
 
 	FocusWhellComboBox* signalMethodBox;
