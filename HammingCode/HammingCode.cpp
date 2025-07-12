@@ -346,7 +346,6 @@ void HammingCode::plotChanged(int index)
 {
 	plot->detachItems(QwtPlotItem::Rtti_PlotCurve, false);
 	curves[plotErrorSelector->currentIndex()][plotSignalSelector->currentIndex()]->attach(plot);
-	plot->replot();
 }
 
 void HammingCode::itemChanged(QTableWidgetItem* item)
@@ -640,6 +639,7 @@ void HammingCode::calculate_clicked()
 	// Add Plot and Curves
 	if (plot == nullptr) {
 		plot = new QwtPlot;
+		plot->setAutoReplot(true);
 		plot->setAxisTitle(QwtPlot::xBottom, "t");
 		plot->setAxisTitle(QwtPlot::yLeft, "A");
 
