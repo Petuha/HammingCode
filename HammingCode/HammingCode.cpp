@@ -238,7 +238,7 @@ HammingCode::HammingCode(QWidget* parent)
 	copyPlotToClipboard->hide();
 
 	showTableButton = new QPushButton(ui.centralWidget);
-	showTableButton->setText("Показать таблицу");
+	showTableButton->setText("Показать таблицу итераций");
 	showTableButton->hide();
 
 	plotInfoWidget = new QWidget(ui.centralWidget);
@@ -322,6 +322,10 @@ HammingCode::~HammingCode()
 void HammingCode::showTableClicked()
 {
 	if (dataTable) {
+		// dirty fix for a bug: 
+		// when the same table is showed again, the view lags on big tables
+		// as no fetching is done and all the data is loaded at once
+		dataTable->createModel(handler.iterationResults, handler.modified);
 		dataTable->show();
 		dataTable->resizeToContentAndCenter();
 	}
@@ -668,10 +672,10 @@ void HammingCode::calculate_clicked()
 		noise_form, noise_polarity, noise_params,
 		iterations);
 
-	delete dataTable;
-	dataTable = new DataTable(iterations, modified);
-
 	handler.generate();
+
+	delete dataTable;
+	dataTable = new DataTable();
 
 	// Set trust level
 	resultLabel->show();

@@ -131,6 +131,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CoderDecoder.h" />
+    <ClInclude Include="IterationResult.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CoderDecoder.cpp" />

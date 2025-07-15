@@ -18,6 +18,7 @@
 #include <qwt_plot_renderer.h>
 #include "ui_HammingCode.h"
 #include "../CoderDecoder/CoderDecoder.h"
+#include "IterationResultTableModel.h"
 
 class FocusWhellComboBox : public QComboBox
 {
@@ -71,13 +72,14 @@ class DataTable : public QWidget
 	Q_OBJECT
 
 public:
-	DataTable(int iterations, bool modified);
-	void addRow(const std::vector<std::string>& data);
+	DataTable();
 	void resizeToContentAndCenter();
-	void setTrustLevel(double min, double max, double lvl);
+	void createModel(std::vector<IterationResult>& results, bool isModifiedCode);
+protected slots:
+	void copySelectionToClipboard();
 private:
-	int i;
-	QTableWidget* table;
+	QTableView* view;
+	IterationResultTableModel* model;
 };
 
 class HammingCode : public QMainWindow

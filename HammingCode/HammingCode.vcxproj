@@ -142,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DataTable.cpp" />
+    <ClCompile Include="IterationResultTableModel.cpp" />
     <ClCompile Include="TaskViewer.cpp" />
     <QtRcc Include="HammingCode.qrc" />
     <QtUic Include="HammingCode.ui" />

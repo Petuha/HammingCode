@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -6,21 +6,7 @@
 #include "../NoiseGenerator/NoiseGenerator.h"
 #include "../SignalIdentificator/SignalIdentificator.h"
 #include <random>
-
-struct IterationResult 
-{
-public:
-	int iteration;
-	std::string receivedBits;
-	std::string restoredBits;
-	std::string decodedBits;
-	int brokenCount;
-	int correctlyRestoredInEncodedCount;
-	int correctlyRestoredInDecodedCount;
-	int errorsInDecodedCount;
-	double errorsInDecodedRatio;
-	int correctModifiedVerdictCount;
-};
+#include "IterationResult.h"
 
 /*
 Класс, который будет моделировать эксперименты
@@ -34,31 +20,11 @@ public:
 		double noise_t, double noise_dt, int noise_nu, int noise_dnu,
 		noiseForm noise_form, bool noise_polarity, std::vector<double> noise_params,
 		int iterations);
-	/*
-	returns table row elements for current iteration
-	if all iterations are done, returns empty vector
 
-	[0]	- номер итерации
-
-	Последовательность
-	[1]	- принятая
-	[2]	- восстановленная
-	[3]	- конечная
-
-	Кол-во бит
-	[4]	- искажённые помехой
-	[5]	- верно исправленные в закодированной последовательности
-	[6]	- верно исправленные в декодированной последовательности
-
-	[7]	- кол-во ошибок в декодированной последовательности
-	[8]	- процент ошибок в декодированной последовательности
-
-	Только для модифицированного
-	[9]	- кол-во верных срабатываний проверочного бита
-	*/
 	void generate();
 	std::vector<Dot> getReveicedOnIteration(int iteration);
 
+	bool modified;
 	std::string coded;
 	std::vector<IterationResult> iterationResults;
 	std::vector<Dot> sent;
@@ -77,7 +43,6 @@ private:
 
 	std::string bits;
 	int chunksize;
-	bool modified;
 
 	conversionMethod signal_method;
 	double signal_dt;

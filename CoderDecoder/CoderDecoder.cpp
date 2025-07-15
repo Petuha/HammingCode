@@ -1,4 +1,4 @@
-﻿#include "CoderDecoder.h"
+#include "CoderDecoder.h"
 
 const int TASK_LEN_MIN = 5;
 const int TASK_LEN_MAX = 10;
@@ -187,7 +187,7 @@ void HammingCodeHandler::generate() {
 	iterationResults = std::vector<IterationResult>(iterations);
 	for (int i = 0; i < iterations; i++) {
 		auto received = getReveicedOnIteration(i);
-		iterationResults.push_back(getIterationResult(i, received));
+		iterationResults[i] = getIterationResult(i, received);
 	}
 
 	sort(experiments.begin(), experiments.end());
@@ -250,7 +250,6 @@ IterationResult HammingCodeHandler::getIterationResult(int iteration, std::vecto
 	double errorPercent = 1.0 * errorsDecoded / decodedBits.size();
 
 	IterationResult ret;
-	ret.iteration = iteration; // номер итерации
 	ret.receivedBits = std::move(receivedBits); // принятая
 	ret.restoredBits = std::move(receivedBitsRestored); // восстановленная
 	ret.decodedBits = std::move(decodedBits); // конечная
