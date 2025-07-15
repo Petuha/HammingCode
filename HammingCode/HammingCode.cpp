@@ -597,20 +597,16 @@ void HammingCode::calculate_clicked()
 		return std::unique_ptr<QwtPlotCurve>(curve);
 	};
 
-	auto generateCurvePair = [&](SignalPair p) {
-		return CurvePair(generateCurve(p.sent), generateCurve(p.received));
+	auto generateCurvePair = [&](std::vector<Dot>& p) {
+		return CurvePair(generateCurve(handler.sent), generateCurve(p));
 	};
 
-	// Get table data and curves
-	while (handler.hasNext()) {
-		auto res = handler.next();
-		dataTable->addRow(res.tableRow);
-		curves.iterations.push_back(generateCurvePair(res.values));
-	}
-	curves.maxError = generateCurvePair(handler.maxErrorValues);
-	curves.minError = generateCurvePair(handler.minErrorValues);
-	curves.medianError = generateCurvePair(handler.medianErrorValues);
-	curves.maxCorrectedError = generateCurvePair(handler.maxCorrectedErrorValues);
+	handler.generate();
+
+	curves.maxError = generateCurvePair(handler.receivedMaxError);
+	curves.minError = generateCurvePair(handler.receivedMinError);
+	curves.medianError = generateCurvePair(handler.receivedMedianError);
+	curves.maxCorrectedError = generateCurvePair(handler.receivedMaxCorrectedError);
 
 	// !!! add handler.trustlevel to table or to another place
 	dataTable->setTrustLevel(handler.min, handler.max, handler.trustlevel);

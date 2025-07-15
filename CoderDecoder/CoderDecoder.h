@@ -7,16 +7,19 @@
 #include "../SignalIdentificator/SignalIdentificator.h"
 #include <random>
 
-struct SignalPair {
-	std::vector<Dot> sent;
-	std::vector<Dot> received;
-};
-
 struct IterationResult 
 {
 public:
-	SignalPair values;
-	std::vector<std::string> tableRow;
+	int iteration;
+	std::string receivedBits;
+	std::string restoredBits;
+	std::string decodedBits;
+	int brokenCount;
+	int correctlyRestoredInEncodedCount;
+	int correctlyRestoredInDecodedCount;
+	int errorsInDecodedCount;
+	double errorsInDecodedRatio;
+	int correctModifiedVerdictCount;
 };
 
 /*
@@ -52,16 +55,20 @@ public:
 	Только для модифицированного
 	[9]	- кол-во верных срабатываний проверочного бита
 	*/
-	IterationResult next();
-	bool hasNext();
-	SignalPair maxErrorValues;
-	SignalPair minErrorValues;
-	SignalPair medianErrorValues;
-	SignalPair maxCorrectedErrorValues;
+	void generate();
+	std::vector<Dot> getReveicedOnIteration(int iteration);
+
+	std::vector<IterationResult> iterationResults;
+	std::vector<Dot> sent;
+	std::vector<Dot> receivedMaxError;
+	std::vector<Dot> receivedMinError;
+	std::vector<Dot> receivedMedianError;
+	std::vector<Dot> receivedMaxCorrectedError;
 	double trustlevel = -1;
 	double min = -1;
 	double max = -1;
 private:
+	IterationResult getIterationResult(int iteration, std::vector<Dot>& received);
 	void setTrustLevel();
 	
 	// base parameters
@@ -88,7 +95,6 @@ private:
 
 	// other parameters
 
-	int iteration = 0;
 	std::vector<std::pair<double, int>> experiments; // errors - randSeed
 	std::pair<int, int> greatestCorrectRestored = { -1, -1 };
 	std::string coded;
