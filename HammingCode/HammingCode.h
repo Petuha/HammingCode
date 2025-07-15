@@ -92,6 +92,7 @@ protected slots:
 	void showTableClicked();
 	void copyClicked();
 	void plotChanged(int index);
+	void onPlotIterationChanged();
 	void itemChanged(QTableWidgetItem* item);
 private:
 	Ui::HammingCodeClass ui;
@@ -115,6 +116,8 @@ private:
 	FocusWhellComboBox* plotErrorSelector;
 	QLabel* plotSignalInfo;
 	FocusWhellComboBox* plotSignalSelector;
+	QLabel* plotIterationInfo;
+	QSpinBox* plotIterationSelector;
 	QPushButton* copyPlotToClipboard;
 	QPushButton* showTableButton;
 
@@ -123,6 +126,13 @@ private:
 	enum { tableN = 4 };
 	QTableWidget* tableParams[tableN];
 	QLabel* label[tableN];
+
+	QLabel* resultLabel;
+	QTableWidget* resultTable;
+	QTableWidgetItem* encodedItem;
+	QTableWidgetItem* trustIntervalMinimumItem;
+	QTableWidgetItem* trustIntervalMaximumItem;
+	QTableWidgetItem* trustIntervalLevelItem;
 
 	FocusWhellComboBox* modifiedBox;
 

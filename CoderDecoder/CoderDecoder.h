@@ -59,6 +59,7 @@ public:
 	void generate();
 	std::vector<Dot> getReveicedOnIteration(int iteration);
 
+	std::string coded;
 	std::vector<IterationResult> iterationResults;
 	std::vector<Dot> sent;
 	std::vector<Dot> receivedMaxError;
@@ -98,7 +99,6 @@ private:
 
 	std::vector<std::pair<double, int>> experiments; // errors - randSeed
 	std::pair<int, int> greatestCorrectRestored = { -1, -1 };
-	std::string coded;
 };
 
 /*

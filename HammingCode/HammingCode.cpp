@@ -34,10 +34,11 @@ HammingCode::HammingCode(QWidget* parent)
 {
 	ui.setupUi(this);
 
-	this->setMinimumSize(1280, 720);
-
 	int windowH = ui.centralWidget->parentWidget()->geometry().height();
 	int windowW = ui.centralWidget->parentWidget()->geometry().width();
+
+	// TODO make proper layout (preferrably in QtDesigner) and allow resizing
+	ui.centralWidget->parentWidget()->setFixedSize(windowW, windowH);
 
 	// Table labels
 	label[0] = new QLabel("Эксперимент", ui.centralWidget);
@@ -154,23 +155,83 @@ HammingCode::HammingCode(QWidget* parent)
 	setWidth(ui.calculate, tableParams[3]->width());
 	setHeight(ui.calculate, 50);
 
+	// Trust Interval Table
+	{
+		resultLabel = new QLabel(ui.centralWidget);
+		setX(resultLabel, ui.calculate->x());
+		setY(resultLabel, ui.calculate->y() + ui.calculate->height() + 10);
+		setWidth(resultLabel, tableParams[0]->width());
+		resultLabel->setText("Результаты:");
+		resultLabel->hide();
+
+		resultTable = new QTableWidget(5, 2, ui.centralWidget);
+		setX(resultTable, resultLabel->x());
+		setY(resultTable, resultLabel->y() + resultLabel->height());
+		setWidth(resultTable, tableParams[0]->width());
+		setHeight(resultTable,
+			tableParams[0]->verticalHeader()->defaultSectionSize() * resultTable->rowCount() + 2
+		); // this is fucked up, this whole window really needs some layouts
+		resultTable->verticalHeader()->setVisible(0);
+		resultTable->horizontalHeader()->setVisible(0);
+		resultTable->horizontalHeader()->setDefaultSectionSize(tableParams[0]->horizontalHeader()->defaultSectionSize());
+
+		auto setRow = [&](int i, const char* s, QTableWidgetItem** itemPtr) {
+			auto item = new QTableWidgetItem(s);
+			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+			resultTable->setItem(i, 0, item);
+
+			item = new QTableWidgetItem();
+			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+			resultTable->setItem(i, 1, item);
+
+			*itemPtr = item;
+		};
+		auto setHeading = [&](int i, const char* s) {
+			auto item = new QTableWidgetItem(s);
+			item->setBackground(QBrush(QColor(245, 245, 245)));
+			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+			resultTable->setItem(i, 0, item);
+			resultTable->setSpan(i, 0, 1, 2);
+		};
+		setRow(0, "Закодированная послед.:", &encodedItem);
+		setHeading(1, "Доверительный интервал");
+		setRow(2, "Минимум", &trustIntervalMinimumItem);
+		setRow(3, "Максимум", &trustIntervalMaximumItem);
+		setRow(4, "Уровень доверия", &trustIntervalLevelItem);
+		resultTable->hide();
+	}
+
 	// Plot Info Selectors
-	plotErrorSelector = new FocusWhellComboBox(ui.centralWidget);
-	plotErrorSelector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-	plotErrorSelector->hide();
-
-	plotErrorInfo = new QLabel(ui.centralWidget);
-	plotErrorInfo->setText("Ошибка");
-	plotErrorInfo->hide();
-
 	plotSignalInfo = new QLabel(ui.centralWidget);
-	plotSignalInfo->setText("Сигнал");
+	plotSignalInfo->setText("Сигнал:");
 	plotSignalInfo->hide();
 
 	plotSignalSelector = new FocusWhellComboBox(ui.centralWidget);
+	plotSignalSelector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 	plotSignalSelector->addItem("Отправляемый");
 	plotSignalSelector->addItem("Принимаемый");
 	plotSignalSelector->hide();
+
+	plotErrorInfo = new QLabel(ui.centralWidget);
+	plotErrorInfo->setText("Ошибка:");
+	plotErrorInfo->hide();
+
+	plotErrorSelector = new FocusWhellComboBox(ui.centralWidget);
+	plotErrorSelector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+	plotErrorSelector->addItem("Наибольшая");
+	plotErrorSelector->addItem("Наименьшая");
+	plotErrorSelector->addItem("Медианная");
+	plotErrorSelector->addItem("Наибольшая верно исправленная");
+	plotErrorSelector->addItem("Выбранная итерация");
+	plotErrorSelector->hide();
+
+	plotIterationInfo = new QLabel(ui.centralWidget);
+	plotIterationInfo->setText("Итерация:");
+	plotIterationInfo->hide();
+
+	plotIterationSelector = new QSpinBox(ui.centralWidget);
+	plotIterationSelector->setMinimum(1);
+	plotIterationSelector->hide();
 
 	copyPlotToClipboard = new QPushButton(ui.centralWidget);
 	copyPlotToClipboard->setText("Копировать в буфер");
@@ -183,20 +244,23 @@ HammingCode::HammingCode(QWidget* parent)
 	plotInfoWidget = new QWidget(ui.centralWidget);
 	setX(plotInfoWidget, tableParams[0]->x() + tableParams[0]->width() + 10);
 	setY(plotInfoWidget, tableParams[0]->y());
-	setWidth(plotInfoWidget, 700);
+	setWidth(plotInfoWidget, windowW - plotInfoWidget->x());
 	setHeight(plotInfoWidget, plotErrorSelector->height());
 
 	// Plot Info Area
 	plotInfoLayout = new QHBoxLayout(plotInfoWidget);
 	plotInfoLayout->setContentsMargins(0, 0, 0, 0);
+	plotInfoLayout->setAlignment(Qt::AlignLeft);
 
-	plotInfoLayout->addWidget(plotErrorInfo);
-	plotInfoLayout->addWidget(plotErrorSelector);
 	plotInfoLayout->addWidget(plotSignalInfo);
 	plotInfoLayout->addWidget(plotSignalSelector);
+	plotInfoLayout->addWidget(plotErrorInfo);
+	plotInfoLayout->addWidget(plotErrorSelector);
+	plotInfoLayout->addWidget(plotIterationInfo);
+	plotInfoLayout->addWidget(plotIterationSelector);
+	plotInfoLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
 	plotInfoLayout->addWidget(copyPlotToClipboard);
 	plotInfoLayout->addWidget(showTableButton);
-
 
 	// Plot Layout
 	plotWidget = new QWidget(ui.centralWidget);
@@ -211,6 +275,7 @@ HammingCode::HammingCode(QWidget* parent)
 	// connects
 	connect(plotErrorSelector, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::plotChanged);
 	connect(plotSignalSelector, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::plotChanged);
+	connect(plotIterationSelector, &QSpinBox::editingFinished, this, &HammingCode::onPlotIterationChanged);
 	connect(copyPlotToClipboard, SIGNAL(clicked()), this, SLOT(copyClicked()));
 	connect(showTableButton, SIGNAL(clicked()), this, SLOT(showTableClicked()));
 	for (int i = 0; i < tableN; ++i) {
@@ -282,14 +347,31 @@ void HammingCode::copyClicked()
 	clipboard->setImage(image);
 }
 
-void HammingCode::plotChanged(int _)
+void HammingCode::onPlotIterationChanged() {
+	plotChanged(0);
+}
+
+void HammingCode::plotChanged(int _ = 0)
 {
+	if (plot == nullptr) return;
+
+	plotErrorInfo->hide();
+	plotErrorSelector->hide();
+	plotIterationInfo->hide();
+	plotIterationSelector->hide();
+ 	
 	std::vector<Dot>* points;
+	std::vector<Dot> generatedPoints;
 	switch (plotSignalSelector->currentIndex()) {
+	// Sent
 	case 0:
 		points = &handler.sent;
 		break;
+	// Received
 	case 1:
+		plotErrorInfo->show();
+		plotErrorSelector->show();
+
 		switch (plotErrorSelector->currentIndex()) {
 		case 0:
 			points = &handler.receivedMaxError;
@@ -303,8 +385,13 @@ void HammingCode::plotChanged(int _)
 		case 3:
 			points = &handler.receivedMaxCorrectedError;
 			break;
+		case 4:
+			plotIterationInfo->show();
+			plotIterationSelector->show();
+			generatedPoints = handler.getReveicedOnIteration(plotIterationSelector->value());
+			points = &generatedPoints;
+			break;
 		default:
-			// TODO pair = &curves.iterations[plotErrorSelector->currentIndex() - 4];
 			return;
 		}
 		break;
@@ -518,10 +605,14 @@ void HammingCode::calculate_clicked()
 
 	// pop-up window with task
 	if (task->newTask()) {
+		resultLabel->hide();
+		resultTable->hide();
 		plotErrorInfo->hide();
 		plotErrorSelector->hide();
 		plotSignalInfo->hide();
 		plotSignalSelector->hide();
+		plotIterationInfo->hide();
+		plotIterationSelector->hide();
 		copyPlotToClipboard->hide();
 		showTableButton->hide();
 		if (plot) {
@@ -538,8 +629,6 @@ void HammingCode::calculate_clicked()
 	}
 	this->unlockTables();
 	taskWidget->hide();
-	plotErrorInfo->show();
-	plotErrorSelector->show();
 	plotSignalInfo->show();
 	plotSignalSelector->show();
 	copyPlotToClipboard->show();
@@ -584,8 +673,19 @@ void HammingCode::calculate_clicked()
 
 	handler.generate();
 
-	// !!! add handler.trustlevel to table or to another place
-	dataTable->setTrustLevel(handler.min, handler.max, handler.trustlevel);
+	// Set trust level
+	resultLabel->show();
+	resultTable->show();
+	encodedItem->setText(QString::fromStdString(handler.coded));
+	trustIntervalMinimumItem->setText(QString::number(handler.min, 'g', 2));
+	trustIntervalMaximumItem->setText(QString::number(handler.max, 'g', 2));
+	trustIntervalLevelItem->setText(QString::number(handler.trustlevel, 'g', 2));
+
+	// Reset selectors
+	plotErrorSelector->setCurrentIndex(0);
+	plotSignalSelector->setCurrentIndex(0);
+	plotIterationSelector->setValue(1);
+	plotIterationSelector->setMaximum(iterations);
 
 	// Add plot
 	if (plot == nullptr) {
@@ -625,18 +725,10 @@ void HammingCode::calculate_clicked()
 		QwtSymbol* symbol = new QwtSymbol(QwtSymbol::Diamond, QBrush(Qt::blue), QPen(Qt::blue, 0), QSize(8, 8));
 		curve->setSymbol(symbol);
 		curve->attach(plot);
+
+		// Force update
+		plotChanged();
 	}
 
 	plotLayout->addWidget(plot);
-
-	// Update error selector
-	plotErrorSelector->clear();
-	plotErrorSelector->addItem("Наибольшая");
-	plotErrorSelector->addItem("Наименьшая");
-	plotErrorSelector->addItem("Медианная");
-	plotErrorSelector->addItem("Наибольшая верно исправленная");
-
-	// Select plot
-	plotErrorSelector->setCurrentIndex(0);
-	plotSignalSelector->setCurrentIndex(0);
 }
