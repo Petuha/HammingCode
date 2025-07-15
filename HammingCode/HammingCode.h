@@ -80,28 +80,6 @@ private:
 	QTableWidget* table;
 };
 
-struct CurvePair
-{
-public:
-	CurvePair(
-		std::unique_ptr<QwtPlotCurve> s = std::unique_ptr<QwtPlotCurve>(nullptr), 
-		std::unique_ptr<QwtPlotCurve> r = std::unique_ptr<QwtPlotCurve>(nullptr)) 
-		: sent(std::move(s)), received(std::move(r)) {}
-
-	std::unique_ptr<QwtPlotCurve> sent;
-	std::unique_ptr<QwtPlotCurve> received;
-};
-
-struct CurveSet 
-{
-public:
-	CurvePair maxError;
-	CurvePair minError;
-	CurvePair medianError;
-	CurvePair maxCorrectedError;
-	std::vector<CurvePair> iterations;
-};
-
 class HammingCode : public QMainWindow
 {
 	Q_OBJECT
@@ -122,8 +100,10 @@ private:
 	void lockTables();
 	void unlockTables();
 	
+	HammingCodeHandler handler;
+
 	QwtPlot* plot;
-	CurveSet curves;
+	QwtPlotCurve* curve;
 
 	QWidget* plotWidget;
 	QHBoxLayout* plotLayout;

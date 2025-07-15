@@ -27,6 +27,7 @@ public:
 */
 class HammingCodeHandler {
 public:
+	HammingCodeHandler() = default;
 	HammingCodeHandler(std::string bits, int chunksize, bool modified,
 		conversionMethod signal_method, double signal_dt, double signal_A,
 		int signal_DotsPerBit, bool signal_polarity,

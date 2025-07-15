@@ -284,36 +284,39 @@ void HammingCode::copyClicked()
 
 void HammingCode::plotChanged(int _)
 {
-	plot->detachItems(QwtPlotItem::Rtti_PlotCurve, false);
-
-	CurvePair* pair;
-	switch (plotErrorSelector->currentIndex()) {
-	case -1:
-		return;
-	case 0:
-		pair = &curves.maxError;
-		break;
-	case 1:
-		pair = &curves.minError;
-		break;
-	case 2:
-		pair = &curves.medianError;
-		break;
-	case 3:
-		pair = &curves.maxCorrectedError;
-		break;
-	default:
-		pair = &curves.iterations[plotErrorSelector->currentIndex() - 4];
-		break;
-	}
+	std::vector<Dot>* points;
 	switch (plotSignalSelector->currentIndex()) {
 	case 0:
-		pair->sent->attach(plot);
+		points = &handler.sent;
 		break;
 	case 1:
-		pair->received->attach(plot);
+		switch (plotErrorSelector->currentIndex()) {
+		case 0:
+			points = &handler.receivedMaxError;
+			break;
+		case 1:
+			points = &handler.receivedMinError;
+			break;
+		case 2:
+			points = &handler.receivedMedianError;
+			break;
+		case 3:
+			points = &handler.receivedMaxCorrectedError;
+			break;
+		default:
+			// TODO pair = &curves.iterations[plotErrorSelector->currentIndex() - 4];
+			return;
+		}
 		break;
+	default:
+		return;
 	}
+
+	QPolygonF polygon;
+	for (auto& p : *points) {
+		polygon << QPointF(p.x, p.y);
+	}
+	curve->setSamples(polygon);
 }
 
 void HammingCode::itemChanged(QTableWidgetItem* item)
@@ -544,9 +547,7 @@ void HammingCode::calculate_clicked()
 	if (plot) {
 		plotLayout->removeWidget(plot);
 		plot->setParent(0);
-		plot->detachItems(QwtPlotItem::Rtti_PlotCurve, false);
 	}
-	curves.iterations.clear();
 
 	// get params from input
 	std::string bits = tableParams[1]->item(0, 1)->text().toStdString();
@@ -570,7 +571,7 @@ void HammingCode::calculate_clicked()
 	int iterations = tableParams[0]->item(0, 1)->text().toInt();
 
 	// start experiments
-	HammingCodeHandler handler(
+	handler = HammingCodeHandler(
 		bits, chunksize, modified,
 		signal_method, signal_dt, signal_A,
 		signal_DotsPerBit, signal_polarity,
@@ -581,32 +582,7 @@ void HammingCode::calculate_clicked()
 	delete dataTable;
 	dataTable = new DataTable(iterations, modified);
 
-	auto generateCurve = [&](std::vector<Dot> points) {
-		QPolygonF polygon;
-		for (auto& p : points) {
-			polygon << QPointF(p.x, p.y);
-		}
-
-		auto curve = new QwtPlotCurve;
-		curve->setSamples(polygon);
-		curve->setPen(Qt::blue, 2);
-		curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-
-		QwtSymbol* symbol = new QwtSymbol(QwtSymbol::Diamond, QBrush(Qt::blue), QPen(Qt::blue, 0), QSize(8, 8));
-		curve->setSymbol(symbol);
-		return std::unique_ptr<QwtPlotCurve>(curve);
-	};
-
-	auto generateCurvePair = [&](std::vector<Dot>& p) {
-		return CurvePair(generateCurve(handler.sent), generateCurve(p));
-	};
-
 	handler.generate();
-
-	curves.maxError = generateCurvePair(handler.receivedMaxError);
-	curves.minError = generateCurvePair(handler.receivedMinError);
-	curves.medianError = generateCurvePair(handler.receivedMedianError);
-	curves.maxCorrectedError = generateCurvePair(handler.receivedMaxCorrectedError);
 
 	// !!! add handler.trustlevel to table or to another place
 	dataTable->setTrustLevel(handler.min, handler.max, handler.trustlevel);
@@ -640,6 +616,15 @@ void HammingCode::calculate_clicked()
 		picker->setRubberBandPen(QColor(Qt::red));
 		picker->setTrackerPen(QColor(Qt::black));
 		picker->setStateMachine(new QwtPickerDragPointMachine());
+
+		// Curve
+		curve = new QwtPlotCurve;
+		curve->setPen(Qt::blue, 2);
+		curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+
+		QwtSymbol* symbol = new QwtSymbol(QwtSymbol::Diamond, QBrush(Qt::blue), QPen(Qt::blue, 0), QSize(8, 8));
+		curve->setSymbol(symbol);
+		curve->attach(plot);
 	}
 
 	plotLayout->addWidget(plot);
@@ -650,9 +635,6 @@ void HammingCode::calculate_clicked()
 	plotErrorSelector->addItem("Наименьшая");
 	plotErrorSelector->addItem("Медианная");
 	plotErrorSelector->addItem("Наибольшая верно исправленная");
-	for (int i = 0; i < curves.iterations.size(); i++) {
-		plotErrorSelector->addItem(QString("Итерация №%1").arg(i + 1));
-	}
 
 	// Select plot
 	plotErrorSelector->setCurrentIndex(0);
