@@ -709,7 +709,7 @@ void HammingCode::calculate_clicked()
 		magnifier->setMouseButton(Qt::MiddleButton);
 		magnifier->setWheelFactor(1.1); // invert controls
 		auto panner = new QwtPlotPanner(plot->canvas());
-		panner->setMouseButton(Qt::RightButton);
+		panner->setMouseButton(Qt::LeftButton);
 
 		// Use picker for displaying mouse position
 		auto picker = new QwtPlotPicker(
@@ -720,6 +720,11 @@ void HammingCode::calculate_clicked()
 		picker->setRubberBandPen(QColor(Qt::red));
 		picker->setTrackerPen(QColor(Qt::black));
 		picker->setStateMachine(new QwtPickerDragPointMachine());
+		{
+			QVector<QwtEventPattern::MousePattern> pattern;
+			pattern.push_back(QwtEventPattern::MousePattern(Qt::RightButton));
+			picker->setMousePattern(pattern);
+		}
 
 		// Curve
 		curve = new QwtPlotCurve;
