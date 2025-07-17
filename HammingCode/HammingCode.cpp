@@ -392,7 +392,7 @@ void HammingCode::plotChanged(int _ = 0)
 		case 4:
 			plotIterationInfo->show();
 			plotIterationSelector->show();
-			generatedPoints = handler.getReveicedOnIteration(plotIterationSelector->value());
+			generatedPoints = handler.getReveicedOnIteration(plotIterationSelector->value() - 1);
 			points = &generatedPoints;
 			break;
 		default:
