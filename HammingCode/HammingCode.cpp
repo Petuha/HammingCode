@@ -111,13 +111,13 @@ HammingCode::HammingCode(QWidget* parent)
 		cellSize.setHeight(tableParams[1]->verticalHeader()->defaultSectionSize());
 		tableParams[3]->setIconSize(cellSize);
 	}
-	tableParams[3]->item(0, 0)->setIcon(htmlText("<math>t</math>"));
-	tableParams[3]->item(1, 0)->setIcon(htmlText("<math>&Delta;t</math>"));
-	tableParams[3]->item(2, 0)->setIcon(htmlText("<math>&nu;</math>"));
-	tableParams[3]->item(3, 0)->setIcon(htmlText("<math>&Delta;&nu;</math>"));
-	tableParams[3]->item(4, 0)->setIcon(htmlText("<math>Полярность</math>"));
-	tableParams[3]->item(5, 0)->setIcon(htmlText("<math>a</math>"));
-	tableParams[3]->item(6, 0)->setIcon(htmlText("<math>&Delta;a</math>"));
+	tableParams[3]->item(0, 0)->setText("t");
+	tableParams[3]->item(1, 0)->setText("Δt");
+	tableParams[3]->item(2, 0)->setText("v");
+	tableParams[3]->item(3, 0)->setText("Δv");
+	tableParams[3]->item(4, 0)->setText("Полярность");
+	tableParams[3]->item(5, 0)->setText("a");
+	tableParams[3]->item(6, 0)->setText("Δa");
 
 	// Experiment values
 	tableParams[0]->item(0, 0)->setText("Число итераций");
