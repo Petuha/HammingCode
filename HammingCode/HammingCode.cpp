@@ -99,9 +99,9 @@ HammingCode::HammingCode(QWidget* parent)
 
 	// Signal values
 	tableParams[2]->item(0, 0)->setText("Метод преобразования");
-	tableParams[2]->item(1, 0)->setText("Шаг дискретизации");
+	tableParams[2]->item(1, 0)->setText("Временной интервал");
 	tableParams[2]->item(2, 0)->setText("Амплитуда");
-	tableParams[2]->item(3, 0)->setText("Точек на бит");
+	tableParams[2]->item(3, 0)->setText("Интервалов на бит");
 	tableParams[2]->item(4, 0)->setText("Полярность");
 
 	// Noise values
