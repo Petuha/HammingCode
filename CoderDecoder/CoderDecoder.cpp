@@ -348,7 +348,7 @@ bool TaskManager::newTask()
 
 bool TaskManager::checkAnswer(const std::string& ans, ModifiedVerdict verdict)
 {
-	if (ans == ansToTask && verdict == verdictTotask || true) {
+	if (ans == ansToTask && verdict == verdictTotask) {
 		++task_num;
 		ansToTask = "";
 		return 1;
