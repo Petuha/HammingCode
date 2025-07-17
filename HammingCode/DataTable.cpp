@@ -9,8 +9,6 @@ DataTable::DataTable()
 	view = new QTableView(this);
 	
 	view->setAlternatingRowColors(true);
-	view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-	view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
 	view->horizontalHeader()->setMinimumSectionSize(200);
 	view->horizontalHeader()->setFixedHeight(60);
@@ -35,16 +33,20 @@ DataTable::DataTable()
 }
 
 void DataTable::resizeToContentAndCenter() {
+	const int MAXIMIZATION_MARGIN = 100; // take stuff like taskbar into account
+
 	auto screen = QGuiApplication::primaryScreen();
 	auto available = screen->availableGeometry();
 	
 	view->resizeRowsToContents();
 	auto size = view->sizeHint();
-	if (size.width() > available.width()) size.setWidth(available.width());
-	if (size.height() > available.height()) size.setHeight(available.height());
-	resize(size);
-
-	this->move(available.center() - rect().center());
+	if (size.width() > available.width() - MAXIMIZATION_MARGIN || size.height() > available.height() - MAXIMIZATION_MARGIN) {
+		window()->setWindowState(Qt::WindowMaximized);
+	}
+	else {
+		resize(size);
+		this->move(available.center() - rect().center());
+	}
 }
 
 void DataTable::createModel(std::vector<IterationResult>& results, bool isModifiedCode)
