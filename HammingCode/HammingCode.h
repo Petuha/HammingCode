@@ -7,6 +7,7 @@
 #include <QtWidgets>
 #include <QGuiApplication>
 #include <QScreen>
+#include <QResizeEvent>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
@@ -89,6 +90,8 @@ class HammingCode : public QMainWindow
 public:
 	HammingCode(QWidget* parent = nullptr);
 	~HammingCode();
+protected:
+	void resizeEvent(QResizeEvent* event) override;
 protected slots:
 	void calculate_clicked();
 	void showTableClicked();

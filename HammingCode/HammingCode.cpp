@@ -37,9 +37,6 @@ HammingCode::HammingCode(QWidget* parent)
 	int windowH = ui.centralWidget->parentWidget()->geometry().height();
 	int windowW = ui.centralWidget->parentWidget()->geometry().width();
 
-	// TODO make proper layout (preferrably in QtDesigner) and allow resizing
-	ui.centralWidget->parentWidget()->setFixedSize(windowW, windowH);
-
 	// Table labels
 	label[0] = new QLabel("Эксперимент", ui.centralWidget);
 	label[1] = new QLabel("Код Хэмминга", ui.centralWidget);
@@ -69,6 +66,7 @@ HammingCode::HammingCode(QWidget* parent)
 	auto setTableParamsLabel = [&]() {
 		for (int i = 0; i < tableN; ++i) {
 			tableParams[i]->horizontalHeader()->setDefaultSectionSize(150);
+			tableParams[i]->verticalHeader()->setDefaultSectionSize(20);
 		}
 		int tableW = tableParams[1]->horizontalHeader()->defaultSectionSize();
 		int tableH = tableParams[1]->verticalHeader()->defaultSectionSize();
@@ -159,7 +157,7 @@ HammingCode::HammingCode(QWidget* parent)
 	{
 		resultLabel = new QLabel(ui.centralWidget);
 		setX(resultLabel, ui.calculate->x());
-		setY(resultLabel, ui.calculate->y() + ui.calculate->height() + 10);
+		setY(resultLabel, ui.calculate->y() + ui.calculate->height() + 5);
 		setWidth(resultLabel, tableParams[0]->width());
 		resultLabel->setText("Результаты:");
 		resultLabel->hide();
@@ -174,6 +172,7 @@ HammingCode::HammingCode(QWidget* parent)
 		resultTable->verticalHeader()->setVisible(0);
 		resultTable->horizontalHeader()->setVisible(0);
 		resultTable->horizontalHeader()->setDefaultSectionSize(tableParams[0]->horizontalHeader()->defaultSectionSize());
+		resultTable->verticalHeader()->setDefaultSectionSize(tableParams[0]->verticalHeader()->defaultSectionSize());
 
 		auto setRow = [&](int i, const char* s, QTableWidgetItem** itemPtr) {
 			auto item = new QTableWidgetItem(s);
@@ -243,7 +242,7 @@ HammingCode::HammingCode(QWidget* parent)
 
 	plotInfoWidget = new QWidget(ui.centralWidget);
 	setX(plotInfoWidget, tableParams[0]->x() + tableParams[0]->width() + 10);
-	setY(plotInfoWidget, tableParams[0]->y());
+	setY(plotInfoWidget, label[0]->y());
 	setWidth(plotInfoWidget, windowW - plotInfoWidget->x());
 	setHeight(plotInfoWidget, plotErrorSelector->height());
 
@@ -317,6 +316,17 @@ HammingCode::HammingCode(QWidget* parent)
 
 HammingCode::~HammingCode()
 {
+}
+
+void HammingCode::resizeEvent(QResizeEvent* event) {
+	int w = event->size().width();
+	int h = event->size().height();
+
+	setWidth(plotInfoWidget, w - plotInfoWidget->x());
+	setWidth(plotWidget, w - plotInfoWidget->x());
+	setHeight(plotWidget, h - (plotInfoWidget->y() + plotInfoWidget->height()));
+
+	QMainWindow::resizeEvent(event);
 }
 
 void HammingCode::showTableClicked()
