@@ -764,10 +764,9 @@ void HammingCode::calculate_clicked()
 		QwtSymbol* symbol = new QwtSymbol(QwtSymbol::Diamond, QBrush(Qt::blue), QPen(Qt::blue, 0), QSize(8, 8));
 		curve->setSymbol(symbol);
 		curve->attach(plot);
-
-		// Force update
-		plotChanged();
 	}
 
 	plotLayout->addWidget(plot);
+	// Force update
+	plotChanged();
 }
