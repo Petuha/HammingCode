@@ -32,6 +32,9 @@
     <ClCompile Include="HammingCode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <QtRcc Include="resources.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -43,10 +46,19 @@
     <ClCompile Include="DataTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="IterationResultTableModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="HammingCode.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="IterationResultTableModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="help.html" />
   </ItemGroup>
 </Project>

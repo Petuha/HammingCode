@@ -32,23 +32,10 @@ QPixmap htmlText(const QString& text) {
 HammingCode::HammingCode(QWidget* parent)
 	: QMainWindow(parent)
 {
-
 	ui.setupUi(this);
-
-	this->setMinimumSize(1280, 720);
-
-	// Plots
-	for (int i = 0; i < plotN; ++i) {
-		for (int j = 0; j < plotM; ++j) {
-			series[i][j] = 0;
-			chart[i][j] = 0;
-			chartview[i][j] = 0;
-		}
-	}
 
 	int windowH = ui.centralWidget->parentWidget()->geometry().height();
 	int windowW = ui.centralWidget->parentWidget()->geometry().width();
-
 
 	// Table labels
 	label[0] = new QLabel("Эксперимент", ui.centralWidget);
@@ -59,7 +46,7 @@ HammingCode::HammingCode(QWidget* parent)
 	// Table params
 	tableParams[1] = new QTableWidget(3, 2, ui.centralWidget);
 	tableParams[2] = new QTableWidget(5, 2, ui.centralWidget);
-	tableParams[3] = new QTableWidget(8, 2, ui.centralWidget);
+	tableParams[3] = new QTableWidget(7, 2, ui.centralWidget);
 	tableParams[0] = new QTableWidget(1, 2, ui.centralWidget);
 	for (int param = 0; param < tableN; ++param) {
 		for (int i = 0; i < tableParams[param]->rowCount(); ++i) {
@@ -79,6 +66,7 @@ HammingCode::HammingCode(QWidget* parent)
 	auto setTableParamsLabel = [&]() {
 		for (int i = 0; i < tableN; ++i) {
 			tableParams[i]->horizontalHeader()->setDefaultSectionSize(150);
+			tableParams[i]->verticalHeader()->setDefaultSectionSize(20);
 		}
 		int tableW = tableParams[1]->horizontalHeader()->defaultSectionSize();
 		int tableH = tableParams[1]->verticalHeader()->defaultSectionSize();
@@ -111,9 +99,9 @@ HammingCode::HammingCode(QWidget* parent)
 
 	// Signal values
 	tableParams[2]->item(0, 0)->setText("Метод преобразования");
-	tableParams[2]->item(1, 0)->setText("Шаг дискретизации");
+	tableParams[2]->item(1, 0)->setText("Временной интервал");
 	tableParams[2]->item(2, 0)->setText("Амплитуда");
-	tableParams[2]->item(3, 0)->setText("Точек на бит");
+	tableParams[2]->item(3, 0)->setText("Интервалов на бит");
 	tableParams[2]->item(4, 0)->setText("Полярность");
 
 	// Noise values
@@ -123,14 +111,13 @@ HammingCode::HammingCode(QWidget* parent)
 		cellSize.setHeight(tableParams[1]->verticalHeader()->defaultSectionSize());
 		tableParams[3]->setIconSize(cellSize);
 	}
-	tableParams[3]->item(0, 0)->setIcon(htmlText("<math>t</math>"));
-	tableParams[3]->item(1, 0)->setIcon(htmlText("<math>&Delta;t</math>"));
-	tableParams[3]->item(2, 0)->setIcon(htmlText("<math>&nu;</math>"));
-	tableParams[3]->item(3, 0)->setIcon(htmlText("<math>&Delta;&nu;</math>"));
-	tableParams[3]->item(4, 0)->setIcon(htmlText("<math>Форма</math>"));
-	tableParams[3]->item(5, 0)->setIcon(htmlText("<math>Полярность</math>"));
-	tableParams[3]->item(6, 0)->setIcon(htmlText("<math>a</math>"));
-	tableParams[3]->item(7, 0)->setIcon(htmlText("<math>&Delta;a</math>"));
+	tableParams[3]->item(0, 0)->setText("t");
+	tableParams[3]->item(1, 0)->setText("Δt");
+	tableParams[3]->item(2, 0)->setText("ν");
+	tableParams[3]->item(3, 0)->setText("Δν");
+	tableParams[3]->item(4, 0)->setText("Полярность");
+	tableParams[3]->item(5, 0)->setText("a");
+	tableParams[3]->item(6, 0)->setText("Δa");
 
 	// Experiment values
 	tableParams[0]->item(0, 0)->setText("Число итераций");
@@ -144,7 +131,7 @@ HammingCode::HammingCode(QWidget* parent)
 	// Signal Qcombos
 	signalMethodBox = new FocusWhellComboBox(ui.centralWidget);
 	signalMethodBox->addItem("NRZ");
-	signalMethodBox->addItem("Манчестерский");
+	signalMethodBox->addItem("Манчестерский код");
 	signalMethodBox->addItem("RZ");
 	signalMethodBox->addItem("AMI");
 	tableParams[2]->setCellWidget(0, 1, signalMethodBox);
@@ -155,69 +142,143 @@ HammingCode::HammingCode(QWidget* parent)
 	tableParams[2]->setCellWidget(4, 1, signalPolarBox);
 
 	// Noise Qcombos
-	noiseTypeBox = new FocusWhellComboBox(ui.centralWidget);
-	noiseTypeBox->setIconSize(tableParams[3]->iconSize());
-	noiseTypeBox->addItem(QIcon(htmlText("<math>a</math>")), "");
-	noiseTypeBox->addItem(QIcon(htmlText("<math>a sin(bx)</math>")), "");
-	noiseTypeBox->addItem(QIcon(htmlText("<math>ax<sup>2</sup></math>")), "");
-	tableParams[3]->setCellWidget(4, 1, noiseTypeBox);
-
 	noisePolarBox = new FocusWhellComboBox(ui.centralWidget);
 	noisePolarBox->addItem("Однополярная");
 	noisePolarBox->addItem("Биполярная");
-	tableParams[3]->setCellWidget(5, 1, noisePolarBox);
+	tableParams[3]->setCellWidget(4, 1, noisePolarBox);
 
 	// Calculate button
-	setX(ui.calculate, tableParams[0]->width() + 30);
-	setY(ui.calculate, tableParams[0]->y());
+	setX(ui.calculate, tableParams[3]->x());
+	setY(ui.calculate, tableParams[3]->y() + tableParams[3]->height() + 10);
+	setWidth(ui.calculate, tableParams[3]->width());
+	setHeight(ui.calculate, 50);
+
+	// Help button
+	helpButton = new QPushButton("Справка", ui.centralWidget);
+	setX(helpButton, ui.calculate->x());
+	setY(helpButton, ui.calculate->y() + ui.calculate->height() + 5);
+	setWidth(helpButton, tableParams[3]->width());
+	setHeight(helpButton, 30);
+
+	// Help window
+	helpWindow = new QTextBrowser();
+	helpWindow->setWindowTitle("Справка");
+	helpWindow->setStyleSheet(R"(
+        QTextBrowser {
+            background-color: #F0F0F0;
+        }
+    )");
+	helpWindow->setSource(QUrl("qrc:/html/help.html"));
+	helpWindow->resize(600, 800);
+	helpWindow->hide();
+
+	// Trust Interval Table
+	{
+		resultLabel = new QLabel(ui.centralWidget);
+		setX(resultLabel, helpButton->x());
+		setY(resultLabel, helpButton->y() + helpButton->height() + 5);
+		setWidth(resultLabel, tableParams[0]->width());
+		resultLabel->setText("Результаты:");
+		resultLabel->hide();
+
+		resultTable = new QTableWidget(5, 2, ui.centralWidget);
+		setX(resultTable, resultLabel->x());
+		setY(resultTable, resultLabel->y() + resultLabel->height());
+		setWidth(resultTable, tableParams[0]->width());
+		setHeight(resultTable,
+			tableParams[0]->verticalHeader()->defaultSectionSize() * resultTable->rowCount() + 2
+		); // this is fucked up, this whole window really needs some layouts
+		resultTable->verticalHeader()->setVisible(0);
+		resultTable->horizontalHeader()->setVisible(0);
+		resultTable->horizontalHeader()->setDefaultSectionSize(tableParams[0]->horizontalHeader()->defaultSectionSize());
+		resultTable->verticalHeader()->setDefaultSectionSize(tableParams[0]->verticalHeader()->defaultSectionSize());
+
+		auto setRow = [&](int i, const char* s, QTableWidgetItem** itemPtr) {
+			auto item = new QTableWidgetItem(s);
+			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+			resultTable->setItem(i, 0, item);
+
+			item = new QTableWidgetItem();
+			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+			resultTable->setItem(i, 1, item);
+
+			*itemPtr = item;
+		};
+		auto setHeading = [&](int i, const char* s) {
+			auto item = new QTableWidgetItem(s);
+			item->setBackground(QBrush(QColor(245, 245, 245)));
+			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+			resultTable->setItem(i, 0, item);
+			resultTable->setSpan(i, 0, 1, 2);
+		};
+		setRow(0, "Закодированная послед.:", &encodedItem);
+		setHeading(1, "Доверительный интервал");
+		setRow(2, "Минимум", &trustIntervalMinimumItem);
+		setRow(3, "Максимум", &trustIntervalMaximumItem);
+		setRow(4, "Уровень доверия", &trustIntervalLevelItem);
+		resultTable->hide();
+	}
 
 	// Plot Info Selectors
+	plotSignalInfo = new QLabel(ui.centralWidget);
+	plotSignalInfo->setText("Сигнал:");
+	plotSignalInfo->hide();
+
+	plotSignalSelector = new FocusWhellComboBox(ui.centralWidget);
+	plotSignalSelector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+	plotSignalSelector->addItem("Отправляемый");
+	plotSignalSelector->addItem("Принимаемый");
+	plotSignalSelector->hide();
+
+	plotErrorInfo = new QLabel(ui.centralWidget);
+	plotErrorInfo->setText("Ошибка:");
+	plotErrorInfo->hide();
+
 	plotErrorSelector = new FocusWhellComboBox(ui.centralWidget);
+	plotErrorSelector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 	plotErrorSelector->addItem("Наибольшая");
 	plotErrorSelector->addItem("Наименьшая");
 	plotErrorSelector->addItem("Медианная");
 	plotErrorSelector->addItem("Наибольшая верно исправленная");
+	plotErrorSelector->addItem("Выбранная итерация");
 	plotErrorSelector->hide();
 
-	plotErrorInfo = new QLabel(ui.centralWidget);
-	plotErrorInfo->setText("Ошибка");
-	plotErrorInfo->hide();
+	plotIterationInfo = new QLabel(ui.centralWidget);
+	plotIterationInfo->setText("Итерация:");
+	plotIterationInfo->hide();
 
-	plotSignalInfo = new QLabel(ui.centralWidget);
-	plotSignalInfo->setText("Сигнал");
-	plotSignalInfo->hide();
-
-	plotSignalSelector = new FocusWhellComboBox(ui.centralWidget);
-	plotSignalSelector->addItem("Отправляемый");
-	plotSignalSelector->addItem("Принимаемый");
-	plotSignalSelector->hide();
+	plotIterationSelector = new QSpinBox(ui.centralWidget);
+	plotIterationSelector->setMinimum(1);
+	plotIterationSelector->hide();
 
 	copyPlotToClipboard = new QPushButton(ui.centralWidget);
 	copyPlotToClipboard->setText("Копировать в буфер");
 	copyPlotToClipboard->hide();
 
 	showTableButton = new QPushButton(ui.centralWidget);
-	showTableButton->setText("Показать таблицу");
+	showTableButton->setText("Показать таблицу итераций");
 	showTableButton->hide();
 
 	plotInfoWidget = new QWidget(ui.centralWidget);
-	setX(plotInfoWidget, ui.calculate->x() + ui.calculate->width() + 10);
-	setY(plotInfoWidget, ui.calculate->y());
-	setWidth(plotInfoWidget, 700);
+	setX(plotInfoWidget, tableParams[0]->x() + tableParams[0]->width() + 10);
+	setY(plotInfoWidget, label[0]->y());
+	setWidth(plotInfoWidget, windowW - plotInfoWidget->x());
 	setHeight(plotInfoWidget, plotErrorSelector->height());
-	//plotInfoWidget->setStyleSheet("background-color: lightblue;");
 
 	// Plot Info Area
 	plotInfoLayout = new QHBoxLayout(plotInfoWidget);
 	plotInfoLayout->setContentsMargins(0, 0, 0, 0);
+	plotInfoLayout->setAlignment(Qt::AlignLeft);
 
-	plotInfoLayout->addWidget(plotErrorInfo);
-	plotInfoLayout->addWidget(plotErrorSelector);
 	plotInfoLayout->addWidget(plotSignalInfo);
 	plotInfoLayout->addWidget(plotSignalSelector);
+	plotInfoLayout->addWidget(plotErrorInfo);
+	plotInfoLayout->addWidget(plotErrorSelector);
+	plotInfoLayout->addWidget(plotIterationInfo);
+	plotInfoLayout->addWidget(plotIterationSelector);
+	plotInfoLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
 	plotInfoLayout->addWidget(copyPlotToClipboard);
 	plotInfoLayout->addWidget(showTableButton);
-
 
 	// Plot Layout
 	plotWidget = new QWidget(ui.centralWidget);
@@ -226,14 +287,13 @@ HammingCode::HammingCode(QWidget* parent)
 		plotInfoWidget->y() + plotInfoWidget->height(),
 		windowW - plotInfoWidget->x(),
 		windowH - (plotInfoWidget->y() + plotInfoWidget->height()));
-	//plotWidget->setStyleSheet("background-color: lightblue;");
 	plotLayout = new QHBoxLayout(plotWidget);
 	plotLayout->setContentsMargins(0, 0, 0, 0);
 
 	// connects
-	connect(noiseTypeBox, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::noiseChanged);
 	connect(plotErrorSelector, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::plotChanged);
 	connect(plotSignalSelector, &FocusWhellComboBox::currentIndexChanged, this, &HammingCode::plotChanged);
+	connect(plotIterationSelector, &QSpinBox::editingFinished, this, &HammingCode::onPlotIterationChanged);
 	connect(copyPlotToClipboard, SIGNAL(clicked()), this, SLOT(copyClicked()));
 	connect(showTableButton, SIGNAL(clicked()), this, SLOT(showTableClicked()));
 	for (int i = 0; i < tableN; ++i) {
@@ -241,17 +301,18 @@ HammingCode::HammingCode(QWidget* parent)
 			QOverload<const QModelIndex&>::of(&QTableWidget::edit));
 		connect(tableParams[i], &QTableWidget::itemChanged, this, &HammingCode::itemChanged);
 	}
+	connect(helpButton, SIGNAL(clicked()), helpWindow, SLOT(show()));
 
 	// hide status bar
 	this->setStatusBar(0);
 
 	// task viewer
 	taskWidget = new QWidget(ui.centralWidget);
+	taskWidget->hide();
 	setWidth(taskWidget, 500);
 	setHeight(taskWidget, 500);
 	setX(taskWidget, plotWidget->x() + (plotWidget->width() - taskWidget->width()) / 2);
 	setY(taskWidget, plotWidget->y() + (plotWidget->height() - taskWidget->height()) / 2);
-	//taskWidget->setStyleSheet("background-color: lightblue;");
 	task = new TaskViewer(taskWidget, *this);
 
 	// set default params
@@ -264,7 +325,7 @@ HammingCode::HammingCode(QWidget* parent)
 	setDeafaultTableParams(tableParams[1], 0, 2);
 	setDeafaultTableParams(tableParams[2], 1, 4);
 	setDeafaultTableParams(tableParams[3], 0, 4);
-	setDeafaultTableParams(tableParams[3], 6, tableParams[3]->rowCount());
+	setDeafaultTableParams(tableParams[3], 5, tableParams[3]->rowCount());
 	tableParams[2]->item(3, 1)->setText("2");
 	tableParams[1]->item(0, 1)->setText("101010");
 	tableParams[1]->item(1, 1)->setText("6");
@@ -277,92 +338,106 @@ HammingCode::~HammingCode()
 {
 }
 
+void HammingCode::resizeEvent(QResizeEvent* event) {
+	int w = event->size().width();
+	int h = event->size().height();
+
+	setWidth(plotInfoWidget, w - plotInfoWidget->x());
+	setWidth(plotWidget, w - plotInfoWidget->x());
+	setHeight(plotWidget, h - (plotInfoWidget->y() + plotInfoWidget->height()));
+
+	QMainWindow::resizeEvent(event);
+}
+
 void HammingCode::showTableClicked()
 {
 	if (dataTable) {
-		dataTable->hide();
+		// dirty fix for a bug: 
+		// when the same table is showed again, the view lags on big tables
+		// as no fetching is done and all the data is loaded at once
+		dataTable->createModel(handler.iterationResults, handler.modified);
 		dataTable->show();
+		dataTable->resizeToContentAndCenter();
 	}
 }
 
 void HammingCode::copyClicked()
 {
-	int maxWidth = 1920, maxHeight = 1080;
-	QChartView* chartView = chartview[plotErrorSelector->currentIndex()][plotSignalSelector->currentIndex()];
-	if (!chartView) return;
-	int width = chartView->width();
-	int height = chartView->height();
-	if (1.0 * height * maxWidth / width <= maxHeight) {
-		height = static_cast<int>(1.0 * height * maxWidth / width);
-		width = maxWidth;
-	}
-	else {
-		width = static_cast<int>(1.0 * width * maxHeight / height);
-		height = maxHeight;
-	}
-	QImage image(width, height, QImage::Format_ARGB32);
-	image.fill(Qt::transparent);
+	const int TARGET_WIDTH = 1920;
+	const int TARGET_HEIGHT = 1080;
+
+	int width = plot->width();
+	int height = plot->height();
+	double ratio = width < height ? static_cast<double>(TARGET_WIDTH) / width : static_cast<double>(TARGET_HEIGHT) / height;
+
+	QImage image(width * ratio, height * ratio, QImage::Format_ARGB32);
 	QPainter painter(&image);
-	chartView->render(&painter);
+	QwtPlotRenderer renderer;
+	renderer.render(plot, &painter, image.rect());
 	painter.end();
+
 	QClipboard* clipboard = QGuiApplication::clipboard();
 	if (!clipboard) return;
 	clipboard->setImage(image);
 }
 
-void HammingCode::noiseChanged(int index)
-{
-	static int pindex = -1;
-	if (index == 1) {
-		tableParams[3]->setRowCount(tableParams[3]->rowCount() + 2);
-
-		tableParams[3]->setItem(tableParams[3]->rowCount() - 2, 0, new QTableWidgetItem());
-		tableParams[3]->setItem(tableParams[3]->rowCount() - 2, 1, new QTableWidgetItem());
-		tableParams[3]->setItem(tableParams[3]->rowCount() - 1, 0, new QTableWidgetItem());
-		tableParams[3]->setItem(tableParams[3]->rowCount() - 1, 1, new QTableWidgetItem());
-
-		tableParams[3]->item(tableParams[3]->rowCount() - 2, 0)->setFlags(Qt::ItemIsEnabled);
-		tableParams[3]->item(tableParams[3]->rowCount() - 2, 0)->setIcon(htmlText("<math>b</math>"));
-		tableParams[3]->item(tableParams[3]->rowCount() - 1, 0)->setFlags(Qt::ItemIsEnabled);
-		tableParams[3]->item(tableParams[3]->rowCount() - 1, 0)->setIcon(htmlText("<math>&Delta;b</math>"));
-
-		setHeight(tableParams[3],
-			tableParams[3]->height() + 2 * tableParams[3]->verticalHeader()->defaultSectionSize());
-	}
-	else {
-		if (pindex == 1) {
-			delete tableParams[3]->item(tableParams[3]->rowCount() - 2, 0);
-			delete tableParams[3]->item(tableParams[3]->rowCount() - 2, 1);
-			delete tableParams[3]->item(tableParams[3]->rowCount() - 1, 0);
-			delete tableParams[3]->item(tableParams[3]->rowCount() - 1, 1);
-
-			setHeight(tableParams[3],
-				tableParams[3]->height() - 2 * tableParams[3]->verticalHeader()->defaultSectionSize());
-
-			tableParams[3]->setRowCount(tableParams[3]->rowCount() - 2);
-		}
-	}
-	pindex = index;
+void HammingCode::onPlotIterationChanged() {
+	plotChanged(0);
 }
 
-void HammingCode::plotChanged(int index)
+void HammingCode::plotChanged(int _ = 0)
 {
-	//ui.statusBar->showMessage(QString::number(plotTypeSelector->currentIndex()) + " " + 
-		//QString::number(plotSignalSelector->currentIndex()));
+	if (plot == nullptr) return;
 
-	if (pchartview) {
-		pchartview->hide();
-		plotLayout->removeWidget(pchartview);
-		pchartview->setParent(0);
-	}
-	QChartView* ptr = chartview[plotErrorSelector->currentIndex()][plotSignalSelector->currentIndex()];
-	if (!ptr) {
-		//ui.statusBar->showMessage("Pizda");
+	plotErrorInfo->hide();
+	plotErrorSelector->hide();
+	plotIterationInfo->hide();
+	plotIterationSelector->hide();
+ 	
+	std::vector<Dot>* points;
+	std::vector<Dot> generatedPoints;
+	switch (plotSignalSelector->currentIndex()) {
+	// Sent
+	case 0:
+		points = &handler.sent;
+		break;
+	// Received
+	case 1:
+		plotErrorInfo->show();
+		plotErrorSelector->show();
+
+		switch (plotErrorSelector->currentIndex()) {
+		case 0:
+			points = &handler.receivedMaxError;
+			break;
+		case 1:
+			points = &handler.receivedMinError;
+			break;
+		case 2:
+			points = &handler.receivedMedianError;
+			break;
+		case 3:
+			points = &handler.receivedMaxCorrectedError;
+			break;
+		case 4:
+			plotIterationInfo->show();
+			plotIterationSelector->show();
+			generatedPoints = handler.getReveicedOnIteration(plotIterationSelector->value() - 1);
+			points = &generatedPoints;
+			break;
+		default:
+			return;
+		}
+		break;
+	default:
 		return;
 	}
-	plotLayout->addWidget(ptr);
-	ptr->show();
-	pchartview = ptr;
+
+	QPolygonF polygon;
+	for (auto& p : *points) {
+		polygon << QPointF(p.x, p.y);
+	}
+	curve->setSamples(polygon);
 }
 
 void HammingCode::itemChanged(QTableWidgetItem* item)
@@ -376,7 +451,6 @@ void HammingCode::setTablesEnabled(bool flag)
 		tableParams[t]->setEnabled(flag);
 	}
 	modifiedBox->setEnabled(flag);
-	noiseTypeBox->setEnabled(flag);
 	noisePolarBox->setEnabled(flag);
 	signalMethodBox->setEnabled(flag);
 	signalPolarBox->setEnabled(flag);
@@ -497,7 +571,7 @@ void HammingCode::calculate_clicked()
 			return 0;
 			};
 		auto checkNoiseParams = [&]() -> bool {
-			for (int i = 6, parity = 0; i < tableParams[3]->rowCount(); ++i, ++parity) {
+			for (int i = 5, parity = 0; i < tableParams[3]->rowCount(); ++i, ++parity) {
 				if (parity % 2 == 0) {
 					if (!correctDouble(tableParams[3]->item(i, 1)->text())) {
 						tableParams[3]->item(i, 1)->setBackground(Qt::red);
@@ -565,51 +639,37 @@ void HammingCode::calculate_clicked()
 
 	// pop-up window with task
 	if (task->newTask()) {
+		resultLabel->hide();
+		resultTable->hide();
 		plotErrorInfo->hide();
 		plotErrorSelector->hide();
-		plotErrorSelector->setCurrentIndex(0);
 		plotSignalInfo->hide();
 		plotSignalSelector->hide();
-		plotSignalSelector->setCurrentIndex(0);
+		plotIterationInfo->hide();
+		plotIterationSelector->hide();
 		copyPlotToClipboard->hide();
 		showTableButton->hide();
-		if (pchartview) {
-			plotLayout->removeWidget(pchartview);
-			pchartview->setParent(0);
-			pchartview = 0;
+		if (plot) {
+			plotLayout->removeWidget(plot);
+			plot->setParent(0);
 		}
 		if (dataTable) {
 			delete dataTable;
 			dataTable = 0;
 		}
-		task->show();
+		taskWidget->show();
 		this->lockTables();
 		return;
 	}
 	this->unlockTables();
-	task->hide();
-	plotErrorInfo->show();
-	plotErrorSelector->show();
-	plotErrorSelector->setCurrentIndex(0);
+	taskWidget->hide();
 	plotSignalInfo->show();
 	plotSignalSelector->show();
-	plotSignalSelector->setCurrentIndex(0);
 	copyPlotToClipboard->show();
 	showTableButton->show();
-	if (pchartview) {
-		plotLayout->removeWidget(pchartview);
-		pchartview->setParent(0);
-		pchartview = 0;
-	}
-	for (int i = 0; i < plotN; ++i) {
-		for (int j = 0; j < plotM; ++j) {
-			delete series[i][j];
-			delete chart[i][j];
-			delete chartview[i][j];
-			series[i][j] = 0;
-			chart[i][j] = 0;
-			chartview[i][j] = 0;
-		}
+	if (plot) {
+		plotLayout->removeWidget(plot);
+		plot->setParent(0);
 	}
 
 	// get params from input
@@ -625,16 +685,16 @@ void HammingCode::calculate_clicked()
 	double noise_dt = tableParams[3]->item(1, 1)->text().toDouble();
 	int noise_nu = tableParams[3]->item(2, 1)->text().toInt();
 	int noise_dnu = tableParams[3]->item(3, 1)->text().toInt();
-	noiseForm noise_form = (noiseForm)noiseTypeBox->currentIndex();
+	noiseForm noise_form = noiseForm::RECTANGULAR;
 	bool noise_polarity = noisePolarBox->currentIndex();
 	std::vector<double> noise_params;
-	for (int i = 6; i < tableParams[3]->rowCount(); ++i) {
+	for (int i = 5; i < tableParams[3]->rowCount(); ++i) {
 		noise_params.push_back(tableParams[3]->item(i, 1)->text().toDouble());
 	}
 	int iterations = tableParams[0]->item(0, 1)->text().toInt();
 
 	// start experiments
-	HammingCodeHandler handler(
+	handler = HammingCodeHandler(
 		bits, chunksize, modified,
 		signal_method, signal_dt, signal_A,
 		signal_DotsPerBit, signal_polarity,
@@ -642,54 +702,71 @@ void HammingCode::calculate_clicked()
 		noise_form, noise_polarity, noise_params,
 		iterations);
 
+	handler.generate();
+
 	delete dataTable;
-	dataTable = new DataTable(iterations, modified);
-	//dataTable->show();
+	dataTable = new DataTable();
 
-	std::vector<std::string> rowData;
-	do {
-		rowData = handler.next();
-		// !!! add data to table
-		dataTable->addRow(rowData);
+	// Set trust level
+	resultLabel->show();
+	resultTable->show();
+	encodedItem->setText(QString::fromStdString(handler.coded));
+	trustIntervalMinimumItem->setText(QString::number(handler.min, 'g', 2));
+	trustIntervalMaximumItem->setText(QString::number(handler.max, 'g', 2));
+	trustIntervalLevelItem->setText(QString::number(handler.trustlevel, 'g', 2));
 
-	} while (rowData.size());
-	// !!! add handler.trustlevel to table or to another place
-	dataTable->setTrustLevel(handler.min, handler.max, handler.trustlevel);
+	// Reset selectors
+	plotErrorSelector->setCurrentIndex(0);
+	plotSignalSelector->setCurrentIndex(0);
+	plotIterationSelector->setValue(1);
+	plotIterationSelector->setMaximum(iterations);
 
-	// add plots to view
-	auto newPlot = [&](int i, int j, const std::vector<Dot>& data) {
-		series[i][j] = new QLineSeries;
-		double marginX = 0, marginY = 3, minY = 0, minX = 0, maxY = 0, maxX = 0;
-		if (data.size()) {
-			minX = maxX = data[0].x;
-			minY = maxY = data[0].y;
+	// Add plot
+	if (plot == nullptr) {
+		plot = new QwtPlot;
+		plot->setAutoReplot(true);
+		plot->setAxisTitle(QwtPlot::xBottom, "t");
+		plot->setAxisTitle(QwtPlot::yLeft, "A");
+
+		auto grid = new QwtPlotGrid();
+		grid->setMajorPen(QPen(Qt::gray, 1));
+		grid->setMinorPen(QPen(Qt::lightGray, 1));
+		grid->enableXMin(true);
+		grid->enableYMin(true);
+		grid->attach(plot);
+
+		auto magnifier = new QwtPlotMagnifier(plot->canvas());
+		magnifier->setMouseButton(Qt::MiddleButton);
+		magnifier->setWheelFactor(1.1); // invert controls
+		auto panner = new QwtPlotPanner(plot->canvas());
+		panner->setMouseButton(Qt::LeftButton);
+
+		// Use picker for displaying mouse position
+		auto picker = new QwtPlotPicker(
+			QwtPlot::xBottom, QwtPlot::yLeft,
+			QwtPlotPicker::CrossRubberBand,
+			QwtPicker::ActiveOnly,
+			plot->canvas());
+		picker->setRubberBandPen(QColor(Qt::red));
+		picker->setTrackerPen(QColor(Qt::black));
+		picker->setStateMachine(new QwtPickerDragPointMachine());
+		{
+			QVector<QwtEventPattern::MousePattern> pattern;
+			pattern.push_back(QwtEventPattern::MousePattern(Qt::RightButton));
+			picker->setMousePattern(pattern);
 		}
-		for (auto& x : data) {
-			series[i][j]->append(x.x, x.y);
-			if (x.x < minX) minX = x.x;
-			if (x.x > maxX) maxX = x.x;
-			if (x.y < minY) minY = x.y;
-			if (x.y > maxY) maxY = x.y;
-		}
 
-		chart[i][j] = new QChart;
-		chart[i][j]->legend()->hide();
-		chart[i][j]->addSeries(series[i][j]);
-		chart[i][j]->createDefaultAxes();
-		chart[i][j]->axes(Qt::Horizontal).first()->setRange(minX - marginX, maxX + marginX);
-		chart[i][j]->axes(Qt::Vertical).first()->setRange(minY - marginY, maxY + marginY);
+		// Curve
+		curve = new QwtPlotCurve;
+		curve->setPen(Qt::blue, 2);
+		curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 
-		chart[i][j]->layout()->setContentsMargins(0, 0, 0, 0);
-		chart[i][j]->setBackgroundRoundness(0);
-
-		chartview[i][j] = new QChartView(chart[i][j]);
-		chartview[i][j]->setRenderHint(QPainter::Antialiasing);
-		};
-	for (int i = 0; i < plotN; ++i) {
-		for (int j = 0; j < plotM; ++j) {
-			newPlot(i, j, handler.plots[i][j]);
-		}
+		QwtSymbol* symbol = new QwtSymbol(QwtSymbol::Diamond, QBrush(Qt::blue), QPen(Qt::blue, 0), QSize(8, 8));
+		curve->setSymbol(symbol);
+		curve->attach(plot);
 	}
-	plotLayout->addWidget(chartview[0][0]);
-	pchartview = chartview[0][0];
+
+	plotLayout->addWidget(plot);
+	// Force update
+	plotChanged();
 }

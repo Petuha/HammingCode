@@ -1,4 +1,7 @@
-﻿#include "CoderDecoder.h"
+#include "CoderDecoder.h"
+
+const int TASK_LEN_MIN = 5;
+const int TASK_LEN_MAX = 10;
 
 int getcodedChunkSize(int chunksize, bool modified) {
 	auto additionalBits = [&]() -> int {
@@ -178,45 +181,35 @@ HammingCodeHandler::HammingCodeHandler(std::string bits, int chunksize, bool mod
 	coded = hammingCoder(this->bits, chunksize, modified);
 }
 
-std::vector<std::string> HammingCodeHandler::next()
-{
-	if (iteration == iterations) return {};
+void HammingCodeHandler::generate() {
+	sent = generateSignalFromBits(coded, signal_method, signal_dt, signal_A, signal_DotsPerBit, signal_polarity);
+	
+	iterationResults = std::vector<IterationResult>(iterations);
+	for (int i = 0; i < iterations; i++) {
+		auto received = getReveicedOnIteration(i);
+		iterationResults[i] = getIterationResult(i, received);
+	}
 
-	// do experiment
+	sort(experiments.begin(), experiments.end());
 
-	/*
-	Данные строки таблицы
+	receivedMaxError = getReveicedOnIteration(experiments.rbegin()->second);
+	receivedMinError = getReveicedOnIteration(experiments.begin()->second);
+	receivedMedianError = getReveicedOnIteration(experiments[experiments.size() / 2].second);
+	receivedMaxCorrectedError = getReveicedOnIteration(greatestCorrectRestored.second);
 
-	номер итерации
+	setTrustLevel();
+}
 
-	последовательности:
+std::vector<Dot> HammingCodeHandler::getReveicedOnIteration(int iteration) {
+	std::vector<Dot> received(sent);
+	generateNoise(iteration, received, noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
+	return received;
+}
 
-	принятая
-	с восстановленными ошибками
-	конечная
+IterationResult HammingCodeHandler::getIterationResult(int iteration, std::vector<Dot>& received) {
+	std::string receivedBits = bitsFromSignal(received, signal_method, signal_dt, signal_A, signal_DotsPerBit, signal_polarity);
 
-	далее информация:
-
-	кол-во искажённых помехой бит
-	кол-во верно исправленных бит в закодированной последовательности
-	кол-во верно исправленных бит в декодированной последовательности
-	кол-во ошибок в декодированной последовательности
-	процент ошибок в декодированной последовательности
-
-	Если код модифицированный:
-
-	кол-во верных вердиктов добавочного бита
-	*/
-	std::vector<std::string> data(9 + modified);
-
-	std::vector<Dot> signal = generateSignalFromBits
-	(coded, signal_method, signal_dt, signal_A, signal_DotsPerBit, signal_polarity);
-	generateNoise
-	(iteration, signal, noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
-	std::string receivedBits = bitsFromSignal
-	(signal, signal_method, signal_dt, signal_A, signal_DotsPerBit, signal_polarity);
-
-	if (receivedBits.size() != coded.size()) return {}; // something really bad, bitsFromSignal problem
+	if (receivedBits.size() != coded.size()) return IterationResult(); // something really bad, bitsFromSignal problem
 
 	int brokenBits = 0;
 	for (int i = 0; i < receivedBits.size(); ++i) {
@@ -256,40 +249,19 @@ std::vector<std::string> HammingCodeHandler::next()
 
 	double errorPercent = 1.0 * errorsDecoded / decodedBits.size();
 
-	data[0] = std::to_string(iteration); // номер итерации
-	data[1] = std::move(receivedBits); // принятая
-	data[2] = std::move(receivedBitsRestored); // восстановленная
-	data[3] = std::move(decodedBits); // конечная
-	data[4] = std::to_string(brokenBits); // искажённые помехой
-	data[5] = std::to_string(correctRestoredBitsCoded); // верно исправленные в закодированной последовательности
-	data[6] = std::to_string(correctRestoredBitsDecoded); // верно исправленные в декодированной последовательности
-	data[7] = std::to_string(errorsDecoded); // ошибки в декодированной последовательности
-	data[8] = std::to_string(errorPercent); // процент ошибок в декодированной последовательности
-	if (modified) data[9] = std::to_string(correctModifiedVerdicts); // верные срабатывания проверочного бита
-
+	IterationResult ret;
+	ret.receivedBits = std::move(receivedBits); // принятая
+	ret.restoredBits = std::move(receivedBitsRestored); // восстановленная
+	ret.decodedBits = std::move(decodedBits); // конечная
+	ret.brokenCount = brokenBits; // искажённые помехой
+	ret.correctlyRestoredInEncodedCount = correctRestoredBitsCoded; // верно исправленные в закодированной последовательности
+	ret.correctlyRestoredInDecodedCount = correctRestoredBitsDecoded; // верно исправленные в декодированной последовательности
+	ret.errorsInDecodedCount = errorsDecoded; // ошибки в декодированной последовательности
+	ret.errorsInDecodedRatio = errorPercent; // процент ошибок в декодированной последовательности
+	if (modified) ret.correctModifiedVerdictCount = correctModifiedVerdicts; // верные срабатывания проверочного бита
 
 	experiments.push_back({ errorPercent, iteration });
-	++iteration;
-
-	if (iteration == iterations) {
-		// prepare plots
-		sort(experiments.begin(), experiments.end());
-		auto addPlot = [&](int i, int seed) {
-			plots[i][0] = generateSignalFromBits
-			(coded, signal_method, signal_dt, signal_A, signal_DotsPerBit, signal_polarity);
-
-			plots[i][1] = plots[i][0];
-			generateNoise
-			(seed, plots[i][1], noise_t, noise_dt, noise_nu, noise_dnu, noise_form, noise_polarity, noise_params);
-			};
-		addPlot(0, experiments.rbegin()->second);
-		addPlot(1, experiments.begin()->second);
-		addPlot(2, experiments[experiments.size() / 2].second);
-		addPlot(3, greatestCorrectRestored.second);
-		setTrustLevel();
-	}
-
-	return data;
+	return ret;
 }
 
 void HammingCodeHandler::setTrustLevel()
@@ -313,7 +285,6 @@ void HammingCodeHandler::setTrustLevel()
 
 TaskManager::TaskManager() :
 	rng(std::mt19937(time(0))),
-	rnum(std::uniform_int_distribution<std::mt19937::result_type>(4, 16)),
 	task(std::vector<std::string>(3))
 {
 	task[1] = task[2] = "0";
@@ -326,18 +297,19 @@ bool TaskManager::hasTasks()
 
 bool TaskManager::newTask()
 {
+	static std::uniform_int_distribution<std::mt19937::result_type> bitDistribution(0, 1);
+	static std::uniform_int_distribution<std::mt19937::result_type> taskLengthDistribution(TASK_LEN_MIN, TASK_LEN_MAX);
+	
 	if (task_num >= 4 || ansToTask != "") return 0;
-	auto randBits = [&]() -> std::string {
-		int n = rnum(rng);
-		std::string ret(n, '0');
-		for (int i = 0; i < n; ++i) {
-			ret[i] = '0' + rnum(rng) % 2;
-		}
-		return ret;
-		};
+
+	std::string data(taskLengthDistribution(rng), '0');
+	for (int i = 0; i < data.length(); ++i) {
+		data[i] = '0' + bitDistribution(rng);
+	}
+
+	task[0] = data;
 	task[1][0] = '0' + task_num % 2;
 	task[2][0] = '0' + task_num / 2 % 2;
-	task[0] = randBits();
 	verdictTotask = ModifiedVerdict::nonModified;
 	if (task[2][0] == '1') {
 		if (task[1][0] == '0') {
@@ -348,7 +320,7 @@ bool TaskManager::newTask()
 			task[0] = hammingCoder(task[0], chunkSize, 1);
 			for (char& c : task[0]) {
 				c -= '0';
-				c += rnum(rng) % 2;
+				c += bitDistribution(rng);
 				c %= 2;
 				c += '0';
 			}
@@ -364,7 +336,7 @@ bool TaskManager::newTask()
 			task[0] = hammingCoder(task[0], chunkSize, 0);
 			for (char& c : task[0]) {
 				c -= '0';
-				c += rnum(rng) % 2;
+				c += bitDistribution(rng);
 				c %= 2;
 				c += '0';
 			}

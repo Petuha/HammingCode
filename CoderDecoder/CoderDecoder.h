@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -6,53 +6,43 @@
 #include "../NoiseGenerator/NoiseGenerator.h"
 #include "../SignalIdentificator/SignalIdentificator.h"
 #include <random>
+#include "IterationResult.h"
+
 /*
 Класс, который будет моделировать эксперименты
 */
 class HammingCodeHandler {
 public:
-	enum class Plot { plotN = 4, plotM = 2 };
+	HammingCodeHandler() = default;
 	HammingCodeHandler(std::string bits, int chunksize, bool modified,
 		conversionMethod signal_method, double signal_dt, double signal_A,
 		int signal_DotsPerBit, bool signal_polarity,
 		double noise_t, double noise_dt, int noise_nu, int noise_dnu,
 		noiseForm noise_form, bool noise_polarity, std::vector<double> noise_params,
 		int iterations);
-	/*
-	returns table row elements for current iteration
-	if all iterations are done, returns empty vector
 
-	[0]	- номер итерации
+	void generate();
+	std::vector<Dot> getReveicedOnIteration(int iteration);
 
-	Последовательность
-	[1]	- принятая
-	[2]	- восстановленная
-	[3]	- конечная
-
-	Кол-во бит
-	[4]	- искажённые помехой
-	[5]	- верно исправленные в закодированной последовательности
-	[6]	- верно исправленные в декодированной последовательности
-
-	[7]	- кол-во ошибок в декодированной последовательности
-	[8]	- процент ошибок в декодированной последовательности
-
-	Только для модифицированного
-	[9]	- кол-во верных срабатываний проверочного бита
-	*/
-	std::vector<std::string> next();
-	std::vector<Dot> plots[(int)Plot::plotN][(int)Plot::plotM]; // all necessary plots
+	bool modified;
+	std::string coded;
+	std::vector<IterationResult> iterationResults;
+	std::vector<Dot> sent;
+	std::vector<Dot> receivedMaxError;
+	std::vector<Dot> receivedMinError;
+	std::vector<Dot> receivedMedianError;
+	std::vector<Dot> receivedMaxCorrectedError;
 	double trustlevel = -1;
 	double min = -1;
 	double max = -1;
 private:
+	IterationResult getIterationResult(int iteration, std::vector<Dot>& received);
 	void setTrustLevel();
 	
 	// base parameters
 
 	std::string bits;
 	int chunksize;
-	bool modified;
 
 	conversionMethod signal_method;
 	double signal_dt;
@@ -72,10 +62,8 @@ private:
 
 	// other parameters
 
-	int iteration = 0;
 	std::vector<std::pair<double, int>> experiments; // errors - randSeed
 	std::pair<int, int> greatestCorrectRestored = { -1, -1 };
-	std::string coded;
 };
 
 /*
@@ -111,5 +99,4 @@ private:
 	std::string ansToTask = "";
 	ModifiedVerdict verdictTotask = ModifiedVerdict::nonModified;
 	std::mt19937 rng;
-	std::uniform_int_distribution<std::mt19937::result_type> rnum;
 };

@@ -3,6 +3,9 @@
 TaskViewer::TaskViewer(QWidget* parent, HammingCode& mainClass) :
 	QWidget(parent), mainClass(mainClass)
 {
+	// Note: It's probabaly a really bad practice and all this UI elements should use 'this' as
+	// a parent, but it messes up all the setGeometry magic	below. 
+	// TODO: Refactor someday
 	taskLabel = new QLabel(parent);
 	answerLabel = new QLabel(parent);
 	table = new QTableWidget(2, 3, parent);
@@ -68,7 +71,6 @@ TaskViewer::TaskViewer(QWidget* parent, HammingCode& mainClass) :
 	connect(checkButton, SIGNAL(clicked()), this, SLOT(check()));
 	connect(answer, &QTableWidget::itemChanged, this, &TaskViewer::answerChanged);
 	connect(verdictBox, &FocusWhellComboBox::currentIndexChanged, this, &TaskViewer::verdictChanged);
-	hide();
 }
 
 TaskViewer::~TaskViewer()
@@ -88,30 +90,6 @@ TaskViewer::~TaskViewer()
 	table = 0;
 	delTable(answer);
 	answer = 0;
-}
-
-void TaskViewer::show()
-{
-	taskLabel->show();
-	answerLabel->show();
-	table->show();
-	answer->show();
-	checkButton->show();
-	if (manager.task[1] == "1" && manager.task[2] == "1") {
-		verdictLabel->show();
-		verdictBox->show();
-	}
-}
-
-void TaskViewer::hide()
-{
-	taskLabel->hide();
-	answerLabel->hide();
-	table->hide();
-	answer->hide();
-	checkButton->hide();
-	verdictLabel->hide();
-	verdictBox->hide();
 }
 
 bool TaskViewer::newTask()
@@ -136,6 +114,15 @@ bool TaskViewer::newTask()
 		}
 		else {
 			table->item(1, 2)->setText("Не модифицированный");
+		}
+
+		if (manager.task[1] == "1" && manager.task[2] == "1") {
+			verdictLabel->show();
+			verdictBox->show();
+		}
+		else {
+			verdictLabel->hide();
+			verdictBox->hide();
 		}
 		return 1;
 	}

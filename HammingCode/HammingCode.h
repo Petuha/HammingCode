@@ -1,13 +1,25 @@
 #pragma once
 
+#include <memory>
 #include <QtWidgets/QMainWindow>
 #include <QtCore>
 #include <QtGui>
-#include <QtCharts>
-#include <QtWidgets/Qwidget>
-#include <QtWidgets/QComboBox>
+#include <QtWidgets>
+#include <QGuiApplication>
+#include <QScreen>
+#include <QResizeEvent>
+#include <qwt_plot.h>
+#include <qwt_plot_curve.h>
+#include <qwt_symbol.h>
+#include <qwt_plot_grid.h>
+#include <qwt_plot_magnifier.h>
+#include <qwt_plot_panner.h>
+#include <qwt_plot_picker.h>
+#include <qwt_picker_machine.h>
+#include <qwt_plot_renderer.h>
 #include "ui_HammingCode.h"
 #include "../CoderDecoder/CoderDecoder.h"
+#include "IterationResultTableModel.h"
 
 class FocusWhellComboBox : public QComboBox
 {
@@ -37,8 +49,6 @@ class TaskViewer : public QWidget
 public:
 	TaskViewer(QWidget* parent, HammingCode& mainClass);
 	~TaskViewer();
-	void show();
-	void hide();
 	bool newTask();
 protected slots:
 	void check();
@@ -63,15 +73,14 @@ class DataTable : public QWidget
 	Q_OBJECT
 
 public:
-	DataTable(int iterations, bool modified);
-	void addRow(const std::vector<std::string>& data);
-	void setTrustLevel(double min, double max, double lvl);
-	~DataTable();
-	void show();
-	void hide();
+	DataTable();
+	void resizeToContentAndCenter();
+	void createModel(std::vector<IterationResult>& results, bool isModifiedCode);
+protected slots:
+	void copySelectionToClipboard();
 private:
-	int i;
-	QTableWidget* table;
+	QTableView* view;
+	IterationResultTableModel* model;
 };
 
 class HammingCode : public QMainWindow
@@ -81,12 +90,14 @@ class HammingCode : public QMainWindow
 public:
 	HammingCode(QWidget* parent = nullptr);
 	~HammingCode();
+protected:
+	void resizeEvent(QResizeEvent* event) override;
 protected slots:
 	void calculate_clicked();
 	void showTableClicked();
 	void copyClicked();
-	void noiseChanged(int index);
 	void plotChanged(int index);
+	void onPlotIterationChanged();
 	void itemChanged(QTableWidgetItem* item);
 private:
 	Ui::HammingCodeClass ui;
@@ -94,12 +105,12 @@ private:
 	void setTablesEnabled(bool flag);
 	void lockTables();
 	void unlockTables();
+	
+	HammingCodeHandler handler;
 
-	enum { plotN = HammingCodeHandler::Plot::plotN, plotM = HammingCodeHandler::Plot::plotM };
-	QLineSeries* series[plotN][plotM];
-	QChart* chart[plotN][plotM];
-	QChartView* chartview[plotN][plotM];
-	QChartView* pchartview = 0;
+	QwtPlot* plot;
+	QwtPlotCurve* curve;
+
 	QWidget* plotWidget;
 	QHBoxLayout* plotLayout;
 
@@ -110,6 +121,8 @@ private:
 	FocusWhellComboBox* plotErrorSelector;
 	QLabel* plotSignalInfo;
 	FocusWhellComboBox* plotSignalSelector;
+	QLabel* plotIterationInfo;
+	QSpinBox* plotIterationSelector;
 	QPushButton* copyPlotToClipboard;
 	QPushButton* showTableButton;
 
@@ -119,9 +132,18 @@ private:
 	QTableWidget* tableParams[tableN];
 	QLabel* label[tableN];
 
+	QPushButton* helpButton;
+	QTextBrowser* helpWindow;
+
+	QLabel* resultLabel;
+	QTableWidget* resultTable;
+	QTableWidgetItem* encodedItem;
+	QTableWidgetItem* trustIntervalMinimumItem;
+	QTableWidgetItem* trustIntervalMaximumItem;
+	QTableWidgetItem* trustIntervalLevelItem;
+
 	FocusWhellComboBox* modifiedBox;
 
-	FocusWhellComboBox* noiseTypeBox;
 	FocusWhellComboBox* noisePolarBox;
 
 	FocusWhellComboBox* signalMethodBox;

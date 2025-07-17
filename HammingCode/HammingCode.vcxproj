@@ -37,14 +37,14 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.8.1_msvc2022_64</QtInstall>
-    <QtModules>core;gui;widgets;charts</QtModules>
+    <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtDeploy>false</QtDeploy>
     <QtDeployCopyFiles>false</QtDeployCopyFiles>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>6.8.1_static</QtInstall>
-    <QtModules>core;gui;widgets;charts</QtModules>
+    <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
     <QtDeploy>false</QtDeploy>
     <QtDeployCopyFiles>false</QtDeployCopyFiles>
@@ -70,6 +70,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <IncludePath>C:\qwt-6.3.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\qwt-6.3.0\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgUseStatic>
@@ -104,7 +106,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>qwt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
       <AdditionalOptions>/NODEFAULTLIB:msvcrt.lib %(AdditionalOptions)</AdditionalOptions>
@@ -140,8 +142,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DataTable.cpp" />
+    <ClCompile Include="IterationResultTableModel.cpp" />
     <ClCompile Include="TaskViewer.cpp" />
     <QtRcc Include="HammingCode.qrc" />
+    <QtRcc Include="resources.qrc" />
     <QtUic Include="HammingCode.ui" />
     <QtMoc Include="HammingCode.h" />
     <ClCompile Include="HammingCode.cpp" />
@@ -160,6 +164,12 @@
     <ProjectReference Include="..\SignalIdentificator\SignalIdentificator.vcxproj">
       <Project>{ce29e26f-ea61-4d43-8fa9-26a60281de5b}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="IterationResultTableModel.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="help.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
