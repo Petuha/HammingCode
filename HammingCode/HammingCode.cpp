@@ -113,8 +113,8 @@ HammingCode::HammingCode(QWidget* parent)
 	}
 	tableParams[3]->item(0, 0)->setText("t");
 	tableParams[3]->item(1, 0)->setText("Δt");
-	tableParams[3]->item(2, 0)->setText("v");
-	tableParams[3]->item(3, 0)->setText("Δv");
+	tableParams[3]->item(2, 0)->setText("ν");
+	tableParams[3]->item(3, 0)->setText("Δν");
 	tableParams[3]->item(4, 0)->setText("Полярность");
 	tableParams[3]->item(5, 0)->setText("a");
 	tableParams[3]->item(6, 0)->setText("Δa");
