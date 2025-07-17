@@ -131,7 +131,7 @@ HammingCode::HammingCode(QWidget* parent)
 	// Signal Qcombos
 	signalMethodBox = new FocusWhellComboBox(ui.centralWidget);
 	signalMethodBox->addItem("NRZ");
-	signalMethodBox->addItem("Манчестерский");
+	signalMethodBox->addItem("Манчестерский код");
 	signalMethodBox->addItem("RZ");
 	signalMethodBox->addItem("AMI");
 	tableParams[2]->setCellWidget(0, 1, signalMethodBox);
@@ -153,11 +153,30 @@ HammingCode::HammingCode(QWidget* parent)
 	setWidth(ui.calculate, tableParams[3]->width());
 	setHeight(ui.calculate, 50);
 
+	// Help button
+	helpButton = new QPushButton("Справка", ui.centralWidget);
+	setX(helpButton, ui.calculate->x());
+	setY(helpButton, ui.calculate->y() + ui.calculate->height() + 5);
+	setWidth(helpButton, tableParams[3]->width());
+	setHeight(helpButton, 30);
+
+	// Help window
+	helpWindow = new QTextBrowser();
+	helpWindow->setWindowTitle("Справка");
+	helpWindow->setStyleSheet(R"(
+        QTextBrowser {
+            background-color: #F0F0F0;
+        }
+    )");
+	helpWindow->setSource(QUrl("qrc:/html/help.html"));
+	helpWindow->resize(600, 800);
+	helpWindow->hide();
+
 	// Trust Interval Table
 	{
 		resultLabel = new QLabel(ui.centralWidget);
-		setX(resultLabel, ui.calculate->x());
-		setY(resultLabel, ui.calculate->y() + ui.calculate->height() + 5);
+		setX(resultLabel, helpButton->x());
+		setY(resultLabel, helpButton->y() + helpButton->height() + 5);
 		setWidth(resultLabel, tableParams[0]->width());
 		resultLabel->setText("Результаты:");
 		resultLabel->hide();
@@ -282,6 +301,7 @@ HammingCode::HammingCode(QWidget* parent)
 			QOverload<const QModelIndex&>::of(&QTableWidget::edit));
 		connect(tableParams[i], &QTableWidget::itemChanged, this, &HammingCode::itemChanged);
 	}
+	connect(helpButton, SIGNAL(clicked()), helpWindow, SLOT(show()));
 
 	// hide status bar
 	this->setStatusBar(0);

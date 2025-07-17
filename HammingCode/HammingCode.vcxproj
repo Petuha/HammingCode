@@ -145,6 +145,7 @@
     <ClCompile Include="IterationResultTableModel.cpp" />
     <ClCompile Include="TaskViewer.cpp" />
     <QtRcc Include="HammingCode.qrc" />
+    <QtRcc Include="resources.qrc" />
     <QtUic Include="HammingCode.ui" />
     <QtMoc Include="HammingCode.h" />
     <ClCompile Include="HammingCode.cpp" />
@@ -163,6 +164,12 @@
     <ProjectReference Include="..\SignalIdentificator\SignalIdentificator.vcxproj">
       <Project>{ce29e26f-ea61-4d43-8fa9-26a60281de5b}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="IterationResultTableModel.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="help.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

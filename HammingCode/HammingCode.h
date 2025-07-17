@@ -132,6 +132,9 @@ private:
 	QTableWidget* tableParams[tableN];
 	QLabel* label[tableN];
 
+	QPushButton* helpButton;
+	QTextBrowser* helpWindow;
+
 	QLabel* resultLabel;
 	QTableWidget* resultTable;
 	QTableWidgetItem* encodedItem;
